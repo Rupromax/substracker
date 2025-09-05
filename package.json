@@ -1,0 +1,29 @@
+{
+  "name": "substrate",
+  "version": "1.0.0",
+  "description": "A simple subscription tracker application",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+"scripts": {
+  "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+  "dev:frontend": "npm --prefix frontend run dev",
+  "dev:backend": "npm --prefix backend run dev",
+  "build": "npm run build:frontend && npm run build:backend",
+  "build:frontend": "npm --prefix frontend run build",
+  "build:backend": "npm --prefix backend run build",
+  "install:all": "npm install && npm --prefix frontend install && npm --prefix backend install"
+  },
+
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250905.0",
+    "concurrently": "^8.2.2"
+  },
+
+
+  "overrides": {
+    "esbuild": "^0.25.0"
+  }
+}
