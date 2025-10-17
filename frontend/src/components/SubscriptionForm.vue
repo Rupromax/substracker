@@ -79,6 +79,7 @@
           class="form-select"
           :class="{ 'border-red-300': errors.billingCycle }"
         >
+          <option value="weekly">每週</option>
           <option value="monthly">每月</option>
           <option value="yearly">每年</option>
         </select>
@@ -110,6 +111,7 @@
         class="form-input"
         :class="{ 'border-red-300': errors.nextBilling }"
         :min="today"
+        :max="maxDate"
       />
       <p v-if="errors.nextBilling" class="form-error">{{ errors.nextBilling }}</p>
     </div>
@@ -173,7 +175,7 @@ const form = ref({
   description: '',
   price: 0,
   currency: 'TWD',
-  billingCycle: 'monthly' as 'monthly' | 'yearly',
+  billingCycle: 'monthly' as 'monthly' | 'yearly' | 'weekly',
   nextBilling: '',
   status: 'active' as 'active' | 'paused' | 'cancelled',
   category: '',
@@ -186,6 +188,11 @@ const errors = ref<Record<string, string>>({})
 // 今天的日期（用於日期輸入的最小值）
 const today = computed(() => {
   return new Date().toISOString().split('T')[0]
+})
+
+// 最大日期（2100年12月31日）
+const maxDate = computed(() => {
+  return '2100-12-31'
 })
 
 // 監聽 props 變化，初始化表單
@@ -241,6 +248,12 @@ function validateForm(): boolean {
   
   if (!form.value.nextBilling) {
     errors.value.nextBilling = '請選擇下次扣款日期'
+  } else {
+    // 驗證日期格式
+    const date = new Date(form.value.nextBilling)
+    if (Number.isNaN(date.getTime()) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
+      errors.value.nextBilling = '請輸入有效的日期（年份應在 1900-2100 之間）'
+    }
   }
   
   return Object.keys(errors.value).length === 0
@@ -252,11 +265,19 @@ function handleSubmit() {
     return
   }
   
-  const submitData = {
-    ...form.value,
-    nextBilling: new Date(form.value.nextBilling).toISOString()
+  // 確保日期格式正確
+  const date = new Date(form.value.nextBilling)
+  if (Number.isNaN(date.getTime())) {
+    errors.value.nextBilling = '請輸入有效的日期'
+    return
   }
   
+  const submitData = {
+    ...form.value,
+    nextBilling: date.toISOString()
+  }
+  
+  console.log('表單提交的數據:', JSON.stringify(submitData, null, 2))
   emit('submit', submitData)
 }
 </script>

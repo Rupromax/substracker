@@ -6,10 +6,31 @@ import type { Subscription, CreateSubscriptionRequest, UpdateSubscriptionRequest
 /// <reference types="@cloudflare/workers-types" />
 
 type Bindings = {
-  SUBSCRIPTIONS_KV: KVNamespace
+  DB: D1Database
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+// 安全標頭中間件
+app.use('*', async (c, next) => {
+  // 添加安全標頭
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('Content-Security-Policy', "frame-ancestors 'none'")
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  
+  // 設置正確的 Content-Type
+  c.header('Content-Type', 'application/json; charset=utf-8')
+  
+  // 添加快取控制標頭
+  if (c.req.method === 'GET') {
+    c.header('Cache-Control', 'public, max-age=300') // 5分鐘快取
+  } else {
+    c.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+  }
+  
+  await next()
+})
 
 // CORS 設定
 app.use('*', cors({
@@ -32,16 +53,46 @@ app.onError((err, c) => {
 function validateSubscription(data: any): string[] {
   const errors: string[] = []
   
+  // 添加調試日誌
+  console.log('=== Backend Validation Debug ===')
+  console.log('Received data:', JSON.stringify(data, null, 2))
+  console.log('Date fields check:')
+  console.log('  next_billing_date:', data.next_billing_date)
+  console.log('  nextBilling:', data.nextBilling)
+  console.log('  next_billing:', data.next_billing)
+  console.log('  renewalDate:', data.renewalDate)
+  console.log('  renewal_date:', data.renewal_date)
+  console.log('===============================')
+  
   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
     errors.push('訂閱名稱是必填項')
   }
   
-  if (!data.renewAt || typeof data.renewAt !== 'string') {
-    errors.push('續約日期是必填項')
-  } else {
-    const renewDate = new Date(data.renewAt)
-    if (isNaN(renewDate.getTime())) {
-      errors.push('續約日期格式無效')
+  // 檢查多種可能的日期字段名稱，並接受任何存在的日期字段
+  const nextBillingDate = data.next_billing_date || data.nextBilling || data.next_billing || data.renewalDate || data.renewal_date || 
+                          data.nextBillingDate || data.next_billing_Date || data.NextBilling
+  
+  console.log('Selected nextBillingDate:', nextBillingDate)
+  console.log('Type of nextBillingDate:', typeof nextBillingDate)
+  
+  // 如果沒有找到任何日期字段，跳過驗證（讓數據庫處理）
+  if (nextBillingDate && typeof nextBillingDate === 'string') {
+    // 處理 ISO 日期格式 (YYYY-MM-DDTHH:mm:ss.sssZ) 或簡單日期格式 (YYYY-MM-DD)
+    let dateToValidate = nextBillingDate
+    if (nextBillingDate.includes('T')) {
+      // 如果是 ISO 格式，提取日期部分
+      dateToValidate = nextBillingDate.split('T')[0]
+    }
+    
+    // 驗證日期格式 YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(dateToValidate)) {
+      errors.push('續約日期格式必須是 YYYY-MM-DD')
+    } else {
+      const date = new Date(dateToValidate)
+      if (isNaN(date.getTime())) {
+        errors.push('續約日期格式無效')
+      }
     }
   }
   
@@ -53,49 +104,84 @@ function validateSubscription(data: any): string[] {
     errors.push('貨幣代碼是必填項')
   }
   
-  if (!data.billingCycle || !['monthly', 'yearly', 'weekly'].includes(data.billingCycle)) {
-    errors.push('計費週期必須是 monthly、yearly 或 weekly')
+  // 檢查多種可能的計費週期字段名稱
+  const billingCycle = data.billing_cycle || data.billingCycle
+  
+  console.log('Billing cycle check:', billingCycle, 'Valid values:', ['monthly', 'yearly'].includes(billingCycle))
+  
+  if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
+    errors.push('計費週期必須是 monthly 或 yearly')
   }
   
+  if (data.status && !['active', 'paused', 'cancelled'].includes(data.status)) {
+    errors.push('狀態必須是 active、paused 或 cancelled')
+  }
+  
+  console.log('Validation errors:', errors)
   return errors
 }
 
-// 生成唯一 ID
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
-}
-
-// KV 存儲服務類
+// D1 數據庫服務類
 class SubscriptionService {
-  private kv: KVNamespace
+  private db: D1Database
 
-  constructor(kv: KVNamespace) {
-    this.kv = kv
+  constructor(db: D1Database) {
+    this.db = db
   }
 
   async getAll(): Promise<Subscription[]> {
     try {
-      const list = await this.kv.list({ prefix: 'subscription:' })
-      const subscriptions: Subscription[] = []
+      const result = await this.db.prepare(`
+        SELECT * FROM subscriptions 
+        ORDER BY next_billing_date ASC
+      `).all()
       
-      for (const key of list.keys) {
-        const value = await this.kv.get(key.name)
-        if (value) {
-          subscriptions.push(JSON.parse(value))
-        }
-      }
-      
-      return subscriptions
+      // 確保沒有 null 值，轉換為空字符串
+      return result.results.map((item: any) => ({
+        id: item.id,
+        name: item.name || '',
+        description: item.description || '',
+        price: item.price || 0,
+        currency: item.currency || 'TWD',
+        billing_cycle: item.billing_cycle || 'monthly',
+        next_billing_date: item.next_billing_date || '',
+        status: item.status || 'active',
+        category: item.category || '',
+        website: item.website || '',
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || new Date().toISOString()
+      })) as Subscription[]
     } catch (error) {
       console.error('獲取訂閱列表失敗:', error)
       throw new Error('獲取訂閱列表失敗')
     }
   }
 
-  async getById(id: string): Promise<Subscription | null> {
+  async getById(id: number): Promise<Subscription | null> {
     try {
-      const value = await this.kv.get(`subscription:${id}`)
-      return value ? JSON.parse(value) : null
+      const result = await this.db.prepare(`
+        SELECT * FROM subscriptions WHERE id = ?
+      `).bind(id).first()
+      
+      if (!result) {
+        return null
+      }
+      
+      // 確保沒有 null 值，轉換為空字符串
+      return {
+        id: result.id,
+        name: result.name || '',
+        description: result.description || '',
+        price: result.price || 0,
+        currency: result.currency || 'TWD',
+        billing_cycle: result.billing_cycle || 'monthly',
+        next_billing_date: result.next_billing_date || '',
+        status: result.status || 'active',
+        category: result.category || '',
+        website: result.website || '',
+        created_at: result.created_at || new Date().toISOString(),
+        updated_at: result.updated_at || new Date().toISOString()
+      } as Subscription
     } catch (error) {
       console.error('獲取訂閱失敗:', error)
       throw new Error('獲取訂閱失敗')
@@ -104,18 +190,98 @@ class SubscriptionService {
 
   async create(data: CreateSubscriptionRequest): Promise<Subscription> {
     try {
-      const id = crypto.randomUUID()
+      console.log('=== Create Subscription Debug ===')
+      console.log('Input data:', JSON.stringify(data, null, 2))
+      
       const now = new Date().toISOString()
       
-      const subscription: Subscription = {
-        id,
-        ...data,
-        createdAt: now,
-        updatedAt: now,
-        status: 'active'
+      // 處理多種可能的日期字段名稱
+      const nextBillingDate = data.next_billing_date || (data as any).nextBilling || (data as any).next_billing || (data as any).renewalDate || (data as any).renewal_date
+      
+      // 處理計費週期字段名稱
+      const billingCycle = data.billing_cycle || (data as any).billingCycle
+      
+      console.log('Processed nextBillingDate:', nextBillingDate)
+      console.log('Processed billingCycle:', billingCycle)
+      
+      // 處理日期格式，確保是 YYYY-MM-DD 格式
+      let formattedDate = nextBillingDate
+      if (nextBillingDate && nextBillingDate.includes('T')) {
+        formattedDate = nextBillingDate.split('T')[0]
       }
       
-      await this.kv.put(`subscription:${id}`, JSON.stringify(subscription))
+      console.log('Formatted date:', formattedDate)
+      
+      console.log('About to insert with values:', {
+        name: data.name,
+        description: data.description || null,
+        price: data.price,
+        currency: data.currency,
+        billingCycle,
+        formattedDate,
+        status: data.status || 'active',
+        category: data.category || null,
+        website: data.website || null,
+        now
+      })
+      
+      const result = await this.db.prepare(`
+        INSERT INTO subscriptions (
+          name, description, price, currency, billing_cycle, 
+          next_billing_date, status, category, website, 
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        data.name,
+        data.description || null,
+        data.price,
+        data.currency,
+        billingCycle,
+        formattedDate,
+        data.status || 'active',
+        data.category || null,
+        data.website || null,
+        now,
+        now
+      ).run()
+      
+      console.log('Insert result:', result)
+      console.log('Insert meta:', result.meta)
+      console.log('Last row ID:', result.meta?.last_row_id)
+      
+      if (!result.success) {
+        console.error('Insert failed:', result)
+        throw new Error('創建訂閱失敗')
+      }
+      
+      // 檢查 last_row_id 是否存在
+      let lastRowId = result.meta?.last_row_id
+      
+      if (!lastRowId || lastRowId <= 0) {
+        console.warn('Invalid last_row_id:', lastRowId, 'trying to get latest record')
+        
+        // 備用方案：查詢最新的記錄
+        const latestResult = await this.db.prepare(`
+          SELECT id FROM subscriptions 
+          WHERE name = ? AND created_at = ?
+          ORDER BY id DESC LIMIT 1
+        `).bind(data.name, now).first()
+        
+        if (latestResult && latestResult.id) {
+          lastRowId = latestResult.id as number
+          console.log('Found latest record ID:', lastRowId)
+        } else {
+          console.error('Cannot find created record')
+          throw new Error('創建訂閱失敗：無法獲取有效的訂閱 ID')
+        }
+      }
+      
+      const subscription = await this.getById(lastRowId)
+      if (!subscription) {
+        throw new Error('創建後無法獲取訂閱')
+      }
+      
+      console.log('Created subscription:', subscription)
       return subscription
     } catch (error) {
       console.error('創建訂閱失敗:', error)
@@ -123,36 +289,99 @@ class SubscriptionService {
     }
   }
 
-  async update(id: string, data: UpdateSubscriptionRequest): Promise<Subscription | null> {
+  async update(id: number, data: UpdateSubscriptionRequest): Promise<Subscription | null> {
     try {
       const existing = await this.getById(id)
       if (!existing) {
         return null
       }
       
-      const updated: Subscription = {
-        ...existing,
-        ...data,
-        updatedAt: new Date().toISOString()
+      const now = new Date().toISOString()
+      
+      // 構建動態更新語句
+      const updateFields: string[] = []
+      const values: any[] = []
+      
+      if (data.name !== undefined) {
+        updateFields.push('name = ?')
+        values.push(data.name)
+      }
+      if (data.description !== undefined) {
+        updateFields.push('description = ?')
+        values.push(data.description)
+      }
+      if (data.price !== undefined) {
+        updateFields.push('price = ?')
+        values.push(data.price)
+      }
+      if (data.currency !== undefined) {
+        updateFields.push('currency = ?')
+        values.push(data.currency)
+      }
+      // 處理計費週期字段名稱
+      const billingCycle = data.billing_cycle || (data as any).billingCycle
+      if (billingCycle !== undefined) {
+        updateFields.push('billing_cycle = ?')
+        values.push(billingCycle)
       }
       
-      await this.kv.put(`subscription:${id}`, JSON.stringify(updated))
-      return updated
+      // 處理日期字段名稱
+      const nextBillingDate = data.next_billing_date || (data as any).nextBilling || (data as any).next_billing || (data as any).renewalDate || (data as any).renewal_date
+      if (nextBillingDate !== undefined) {
+        // 處理日期格式，確保是 YYYY-MM-DD 格式
+        let formattedDate = nextBillingDate
+        if (nextBillingDate && nextBillingDate.includes('T')) {
+          formattedDate = nextBillingDate.split('T')[0]
+        }
+        updateFields.push('next_billing_date = ?')
+        values.push(formattedDate)
+      }
+      if (data.status !== undefined) {
+        updateFields.push('status = ?')
+        values.push(data.status)
+      }
+      if (data.category !== undefined) {
+        updateFields.push('category = ?')
+        values.push(data.category)
+      }
+      if (data.website !== undefined) {
+        updateFields.push('website = ?')
+        values.push(data.website)
+      }
+      
+      updateFields.push('updated_at = ?')
+      values.push(now)
+      values.push(id)
+      
+      const result = await this.db.prepare(`
+        UPDATE subscriptions 
+        SET ${updateFields.join(', ')}
+        WHERE id = ?
+      `).bind(...values).run()
+      
+      if (!result.success) {
+        throw new Error('更新訂閱失敗')
+      }
+      
+      return await this.getById(id)
     } catch (error) {
       console.error('更新訂閱失敗:', error)
       throw new Error('更新訂閱失敗')
     }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     try {
       const existing = await this.getById(id)
       if (!existing) {
         return false
       }
       
-      await this.kv.delete(`subscription:${id}`)
-      return true
+      const result = await this.db.prepare(`
+        DELETE FROM subscriptions WHERE id = ?
+      `).bind(id).run()
+      
+      return result.success
     } catch (error) {
       console.error('刪除訂閱失敗:', error)
       throw new Error('刪除訂閱失敗')
@@ -182,12 +411,45 @@ app.get('/api/health', (c) => {
   } as ApiResponse)
 })
 
+// 數據庫初始化端點
+app.post('/api/init-db', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    // 執行數據庫初始化腳本 - 使用單行 SQL 語句
+    const createTableSQL = `CREATE TABLE IF NOT EXISTS subscriptions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, price REAL NOT NULL, currency TEXT NOT NULL, billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly','yearly')), next_billing_date TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', category TEXT, website TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')), updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')))`
+    
+    const createIndex1SQL = `CREATE INDEX IF NOT EXISTS idx_subs_next_billing ON subscriptions (next_billing_date)`
+    const createIndex2SQL = `CREATE INDEX IF NOT EXISTS idx_subs_status ON subscriptions (status)`
+    
+    // 分步執行 SQL 語句
+    await db.exec(createTableSQL)
+    await db.exec(createIndex1SQL)
+    await db.exec(createIndex2SQL)
+    
+    return c.json({
+      success: true,
+      data: { 
+        executed: true,
+        message: '數據庫表結構已創建'
+      },
+      message: '數據庫初始化成功'
+    } as ApiResponse)
+  } catch (error) {
+    return c.json({
+      success: false,
+      error: error instanceof Error ? error.message : '數據庫初始化失敗',
+      message: '數據庫初始化失敗'
+    } as ApiResponse, 500)
+  }
+})
+
 // 訂閱管理 API 路由
 
 // 獲取所有訂閱
 app.get('/api/subscriptions', async (c) => {
   try {
-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
+    const service = new SubscriptionService(c.env.DB)
     const subscriptions = await service.getAll()
     
     return c.json({
@@ -207,8 +469,16 @@ app.get('/api/subscriptions', async (c) => {
 // 獲取單個訂閱
 app.get('/api/subscriptions/:id', async (c) => {
   try {
-    const id = c.req.param('id')
-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
+    const id = parseInt(c.req.param('id'))
+    if (isNaN(id)) {
+      return c.json({
+        success: false,
+        error: '無效的訂閱ID',
+        message: '訂閱ID必須是數字'
+      } as ApiResponse, 400)
+    }
+    
+    const service = new SubscriptionService(c.env.DB)
     const subscription = await service.getById(id)
     
     if (!subscription) {
@@ -248,7 +518,7 @@ app.post('/api/subscriptions', async (c) => {
       } as ApiResponse, 400)
     }
     
-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
+    const service = new SubscriptionService(c.env.DB)
     const subscription = await service.create(body as CreateSubscriptionRequest)
     
     return c.json({
@@ -268,7 +538,15 @@ app.post('/api/subscriptions', async (c) => {
 // 更新訂閱
 app.put('/api/subscriptions/:id', async (c) => {
   try {
-    const id = c.req.param('id')
+    const id = parseInt(c.req.param('id'))
+    if (isNaN(id)) {
+      return c.json({
+        success: false,
+        error: '無效的訂閱ID',
+        message: '訂閱ID必須是數字'
+      } as ApiResponse, 400)
+    }
+    
     const body = await c.req.json()
     
     // 數據驗證（部分更新，所以只驗證提供的字段）
@@ -281,7 +559,7 @@ app.put('/api/subscriptions/:id', async (c) => {
       } as ApiResponse, 400)
     }
     
-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
+    const service = new SubscriptionService(c.env.DB)
     const subscription = await service.update(id, body as UpdateSubscriptionRequest)
     
     if (!subscription) {
@@ -309,8 +587,16 @@ app.put('/api/subscriptions/:id', async (c) => {
 // 刪除訂閱
 app.delete('/api/subscriptions/:id', async (c) => {
   try {
-    const id = c.req.param('id')
-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
+    const id = parseInt(c.req.param('id'))
+    if (isNaN(id)) {
+      return c.json({
+        success: false,
+        error: '無效的訂閱ID',
+        message: '訂閱ID必須是數字'
+      } as ApiResponse, 400)
+    }
+    
+    const service = new SubscriptionService(c.env.DB)
     const deleted = await service.delete(id)
     
     if (!deleted) {

@@ -1,11 +1,23 @@
 name = "subs-backend"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-09-01"
 
-[dev]
-port = 8977
+[vars]
+DEFAULT_CURRENCY = "TWD"
+ALLOWED_ORIGINS = "http://localhost:3000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "subs-db"
+database_id = "1ad2aab3-de65-43fc-85df-1f8c63432d8f"
 
 [[kv_namespaces]]
 binding = "SUBSCRIPTIONS_KV"
 id = "0fe3512cddea4efda30957c36ce9e6d5"  #生產環境 ID
 preview_id = "d64436260dad4d55929e7f2e638c5c4f"  # 預覽環境 ID
+
+[dev]
+port = 8787
+
+[triggers]
+crons = ["0 0 * * *"]
