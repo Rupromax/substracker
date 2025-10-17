@@ -8,7 +8,7 @@ declare module '*.vue' {
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
-  // 可以在這裡添加更多環境變數
+  // 可以在這裡新增更多環境變數
 }
 
 interface ImportMeta {

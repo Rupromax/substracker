@@ -100,7 +100,7 @@ const pageStore = usePageStore()
 
 // 儲存個人資料
 function saveProfile() {
-  // 這裡可以添加 API 調用來保存資料
+  // 這裡可以新增 API 調用來保存資料
   console.log('儲存個人資料:', pageStore.settings.profile)
   alert('個人資料已儲存！')
 }

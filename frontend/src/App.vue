@@ -6,7 +6,7 @@
           <div class="flex items-center">
             <h1 class="text-xl font-semibold text-gray-900">SubsTracker</h1>
           </div>
-          <div class="flex items-center space-x-4">
+          <div v-if="userStore.isLoggedIn" class="flex items-center space-x-4">
             <router-link 
               to="/subscriptions" 
               class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"

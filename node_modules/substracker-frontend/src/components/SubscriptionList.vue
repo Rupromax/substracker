@@ -36,7 +36,7 @@
       </svg>
       <h3 class="mt-2 text-sm font-medium text-gray-900">沒有找到訂閱</h3>
       <p class="mt-1 text-sm text-gray-500">
-        {{ searchQuery ? '嘗試調整搜索條件' : '開始添加您的第一個訂閱服務' }}
+        {{ searchQuery ? '嘗試調整搜索條件' : '開始新增您的第一個訂閱服務' }}
       </p>
     </div>
   </div>

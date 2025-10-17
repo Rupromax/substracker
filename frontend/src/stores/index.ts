@@ -2,7 +2,7 @@ import api from '@/api';
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
-// 簡化的訂閱接口定義
+// 簡化的訂閱介面定義
 export interface Subscription {
   id: number
   name: string
@@ -14,7 +14,7 @@ export interface Subscription {
   status: 'active' | 'paused' | 'cancelled'
   category: string
   website?: string
-  logo?: string  // 添加可選的 logo 屬性
+  logo?: string  // 新增可選的 logo 屬性
   createdAt: string
   updatedAt: string
 }
@@ -173,10 +173,12 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       }
       
       const result = await api.getSubscriptions()
-      if (result.success && result.data) {
+      if (result.success && Array.isArray(result.data)) {
         subscriptions.value = result.data
-        saveToLocalStorage()
+      } else {
+        subscriptions.value = []
       }
+      saveToLocalStorage()
     } catch (err) {
       console.error('獲取訂閱列表失敗:', err)
       // 如果網絡失敗，嘗試加載本地數據
@@ -199,7 +201,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
         updatedAt: new Date().toISOString()
       }
       
-      // 本地添加
+      // 本地新增
       subscriptions.value.push(newSubscription)
       saveToLocalStorage()
       
@@ -215,7 +217,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       
       return newSubscription
     } catch (err) {
-      console.error('添加訂閱失敗:', err)
+      console.error('新增訂閱失敗:', err)
       throw err
     } finally {
       loading.value = false

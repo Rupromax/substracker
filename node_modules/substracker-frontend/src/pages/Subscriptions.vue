@@ -144,7 +144,7 @@ defineOptions({
 const pageStore = usePageStore()
 
 // 訂閱類型定義
-// 在 Subscription 接口定义后添加 FormData 接口
+// 在 Subscription 介面定義後新增 FormData 介面
 interface Subscription {
   id: number
   name: string
@@ -154,7 +154,7 @@ interface Subscription {
   status: 'active' | 'paused' | 'cancelled'
 }
 
-// 新增 FormData 接口
+// 新增 FormData 介面
 interface FormData {
   name: string
   category: string
@@ -189,9 +189,9 @@ function handleAddClick() {
   pageStore.setShowAddForm(true)
 }
 
-// 使用 FormData 接口作为参数类型
+// 使用 FormData 介面作為參數類型
 function handleAddSubmit(formData: FormData) {
-  console.log('添加新訂閱:', formData)
+  console.log('新增新訂閱:', formData)
 
   const newSubscription = {
     ...formData,
@@ -207,12 +207,12 @@ function handleAddSubmit(formData: FormData) {
 
 
 function handleEdit(subscription: Subscription) {
-  // TODO: 实作编辑订阅功能
-  console.log('编辑订阅:', subscription.name)
+  // TODO: 實作編輯訂閱功能
+  console.log('編輯訂閱:', subscription.name)
 }
 
 function handleDelete(id: number) {
-  if (confirm('确定要删除这个订阅吗？')) {
+  if (confirm('確定要刪除這個訂閱嗎？')) {
     subscriptions.value = subscriptions.value.filter(sub => sub.id !== id)
   }
 }
@@ -227,7 +227,7 @@ function formatPrice(price: number): string {
 
 // 初始化
 onMounted(() => {
-  // TODO: 载入订阅数据
-  console.log('订阅管理页面已载入')
+  // TODO: 載入訂閱數據
+  console.log('訂閱管理頁面已載入')
 })
 </script>
