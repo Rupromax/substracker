@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/_metadata.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/chunk-J256NH3B.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/chunk-J256NH3B.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/chunk-PKWBPT5R.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/chunk-PKWBPT5R.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/pinia.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/pinia.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/pinia.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/pinia.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue-router.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue-router.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue-router.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue-router.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/vue.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/subs-backend/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/subs-backend/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/subs-backend/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/subs-backend/src/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/subs-backend/wrangler.toml" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/subs-backend/wrangler.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/dist/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/dist/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/_metadata.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/chunk-J256NH3B.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/chunk-J256NH3B.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/chunk-PKWBPT5R.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/chunk-PKWBPT5R.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/pinia.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/pinia.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/pinia.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/pinia.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue-router.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue-router.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue-router.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue-router.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/node_modules/.vite/deps/vue.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/assets/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/assets/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionCard.vue" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionCard.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionForm.vue" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionForm.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/components/SubscriptionList.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/pages/Settings.vue" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/pages/Settings.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/pages/Subscriptions.vue" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/pages/Subscriptions.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/src/stores/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/src/stores/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/substracker-frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/substracker-frontend/vite.config.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="gh-pages" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Rupromax&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Rupromax/substracker.git&quot;,
+    &quot;accountId&quot;: &quot;4c4a3661-f7d5-4ee9-84c2-e89a32e0ca52&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="34Ds5R2uNixKdwJtQ6SPOIXk6nB" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\andy9\\AppData\\Local\\Programs\\WebStorm 2025.2.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-WS-252.26830.93" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="" />
+      <created>1760759292682</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760759292682</updated>
+      <workItem from="1760759293917" duration="1197000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

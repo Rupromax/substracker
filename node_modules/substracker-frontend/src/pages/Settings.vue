@@ -14,8 +14,9 @@
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">姓名</label>
+            <label for="profileName" class="block text-sm font-medium text-gray-700">姓名</label>
             <input
+              id="profileName"
               v-model="pageStore.settings.profile.name"
               type="text"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
@@ -42,6 +43,7 @@
               <p class="text-sm text-gray-500">在扣款前 3 天發送提醒</p>
             </div>
             <input
+              id="billingNotification"
               v-model="pageStore.settings.notifications.billing"
               type="checkbox"
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
@@ -54,6 +56,7 @@
               <p class="text-sm text-gray-500">每月發送支出統計報告</p>
             </div>
             <input
+              id="monthlyNotification"
               v-model="pageStore.settings.notifications.monthly"
               type="checkbox"
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
@@ -66,6 +69,7 @@
               <p class="text-sm text-gray-500">在日期旁顯示農曆資訊</p>
             </div>
             <input
+              id="lunarNotification"
               v-model="pageStore.settings.notifications.lunar"
               type="checkbox"
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"

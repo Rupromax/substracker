@@ -11,12 +11,12 @@
             class="w-full h-full object-cover"
           />
           <span v-else class="text-lg font-semibold text-gray-600">
-            {{ subscription.name.charAt(0) }}
+            {{ subscription.name?.charAt(0) || '?' }}
           </span>
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-            {{ subscription.name }}
+            {{ subscription.name || '未命名服務' }}
           </h3>
           <p v-if="subscription.description" class="text-sm text-gray-500 mt-1">
             {{ subscription.description }}
@@ -168,7 +168,22 @@ const billingUrgencyText = computed(() => {
 })
 
 // 工具函數
+function isValidDate(dateString: string): boolean {
+  try {
+    const date = new Date(dateString)
+    return !Number.isNaN(date.getTime()) && 
+           date.getFullYear() > 1900 && 
+           date.getFullYear() < 2100
+  } catch {
+    return false
+  }
+}
+
 function getDaysUntilBilling(): number {
+  if (!isValidDate(props.subscription.nextBilling)) {
+    return 0 // 如果日期無效，返回 0
+  }
+  
   const nextBilling = new Date(props.subscription.nextBilling)
   const today = new Date()
   const diffTime = nextBilling.getTime() - today.getTime()
@@ -184,6 +199,10 @@ function formatPrice(price: number): string {
 }
 
 function formatDate(dateString: string): string {
+  if (!isValidDate(dateString)) {
+    return '日期無效' // 如果日期無效，返回錯誤訊息
+  }
+  
   const date = new Date(dateString)
   return new Intl.DateTimeFormat('zh-TW', {
     year: 'numeric',

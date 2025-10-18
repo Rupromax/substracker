@@ -1,0 +1,43 @@
+Index: frontend/vite.config.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { defineConfig } from 'vite'\r\nimport vue from '@vitejs/plugin-vue'\r\nimport { resolve } from 'path'\r\n\r\nexport default defineConfig({\r\n  plugins: [vue()],\r\n  resolve: {\r\n    alias: {\r\n      '@': resolve(__dirname, 'src')\r\n    }\r\n  },\r\n  server: {\r\n    port: 3000,\r\n    open: true\r\n  }\r\n})
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/vite.config.ts b/frontend/vite.config.ts
+--- a/frontend/vite.config.ts	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/frontend/vite.config.ts	(date 1760760909607)
+@@ -3,6 +3,7 @@
+ import { resolve } from 'path'
+ 
+ export default defineConfig({
++  base: "/substracker/",
+   plugins: [vue()],
+   resolve: {
+     alias: {
+Index: frontend/dist/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><!doctype html>\r\n<html lang=\"zh-TW\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\r\n    <title>SubsTracker - 訂閱管理系統</title>\r\n    <script type=\"module\" crossorigin src=\"/assets/index-hjISSMpz.js\"></script>\r\n    <link rel=\"stylesheet\" crossorigin href=\"/assets/index-C4tyMIPW.css\">\r\n  </head>\r\n  <body>\r\n    <div id=\"app\"></div>\r\n  </body>\r\n</html>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/dist/index.html b/frontend/dist/index.html
+--- a/frontend/dist/index.html	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/frontend/dist/index.html	(date 1760761006207)
+@@ -5,10 +5,11 @@
+     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>SubsTracker - 訂閱管理系統</title>
+-    <script type="module" crossorigin src="/assets/index-hjISSMpz.js"></script>
+-    <link rel="stylesheet" crossorigin href="/assets/index-C4tyMIPW.css">
++    <script type="module" crossorigin src="/substracker/assets/index-owNC9nvA.js"></script>
++    <link rel="stylesheet" crossorigin href="/substracker/assets/index-dMawOnRl.css">
+   </head>
+   <body>
+     <div id="app"></div>
++
+   </body>
+ </html>
+\ No newline at end of file
