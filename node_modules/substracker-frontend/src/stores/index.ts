@@ -2,6 +2,31 @@ import api from '@/api';
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
+// 日期驗證工具函數
+function isValidDate(dateString: string): boolean {
+  try {
+    const date = new Date(dateString)
+    return !Number.isNaN(date.getTime()) && 
+           date.getFullYear() > 1900 && 
+           date.getFullYear() < 2100
+  } catch {
+    return false
+  }
+}
+
+// 日期格式化工具函數
+function formatDateForBackend(dateString: string): string | undefined {
+  if (!isValidDate(dateString)) {
+    return undefined
+  }
+  try {
+    const date = new Date(dateString)
+    return date.toISOString().split('T')[0] // 轉換為 YYYY-MM-DD 格式
+  } catch {
+    return undefined
+  }
+}
+
 // 簡化的訂閱介面定義
 export interface Subscription {
   id: number
@@ -9,7 +34,7 @@ export interface Subscription {
   description?: string
   price: number
   currency: string
-  billingCycle: 'monthly' | 'yearly'
+  billingCycle: 'monthly' | 'yearly' | 'weekly'
   nextBilling: string
   status: 'active' | 'paused' | 'cancelled'
   category: string
@@ -173,8 +198,24 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       }
       
       const result = await api.getSubscriptions()
-      if (result.success && Array.isArray(result.data)) {
-        subscriptions.value = result.data
+      if (result.success && result.data && Array.isArray(result.data.data)) {
+        // 轉換後端數據格式為前端格式，添加防護性檢查
+        subscriptions.value = result.data.data
+          .filter((backendItem: any) => backendItem.id && backendItem.id > 0) // 過濾掉無效 ID
+          .map((backendItem: any) => ({
+            id: backendItem.id,
+            name: backendItem.name || '未命名服務',
+            description: backendItem.description || '',
+            price: backendItem.price || 0,
+            currency: backendItem.currency || 'TWD',
+            billingCycle: backendItem.billing_cycle || 'monthly',
+            nextBilling: backendItem.next_billing_date || new Date().toISOString().split('T')[0],
+            status: backendItem.status || 'active',
+            category: backendItem.category || '',
+            website: backendItem.website || '',
+            createdAt: backendItem.created_at || new Date().toISOString(),
+            updatedAt: backendItem.updated_at || new Date().toISOString()
+          }))
       } else {
         subscriptions.value = []
       }
@@ -194,26 +235,75 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     loading.value = true
     
     try {
+      // 整理 payload：移除空字串欄位並確保基本型別
+      const payload: any = { ...subscription }
+      if (typeof payload.price !== 'number') payload.price = Number(payload.price)
+      if (payload.description === '') delete payload.description
+      if (payload.website === '') delete payload.website
+      if (!payload.logo) delete payload.logo
+      // 標準化日期（若非 ISO，轉為 ISO）
+      if (isValidDate(payload.nextBilling)) {
+        const d = new Date(payload.nextBilling)
+        payload.nextBilling = d.toISOString()
+      } else {
+        console.warn('無效的日期格式:', payload.nextBilling)
+      }
+
+      // 先調用 API 創建訂閱，獲取後端返回的真實 ID
+      const backendPayload = {
+        name: payload.name,
+        description: payload.description || '', // 可選，有默認值
+        price: Number(payload.price), // 必須是非負數
+        currency: payload.currency || 'TWD', // 必須是 ['TWD','USD','JPY','EUR'] 之一
+        billing_cycle: payload.billingCycle === 'weekly' ? 'monthly' : payload.billingCycle, // 後端不支援 weekly，轉為 monthly
+        // 使用後端期望的日期字段名稱，確保格式正確
+        next_billing_date: formatDateForBackend(payload.nextBilling),
+        status: payload.status || 'active', // 必須是 ['active','paused','cancelled'] 之一
+        category: payload.category || '', // 可選，有默認值
+        website: payload.website && payload.website.trim() !== '' ? payload.website : undefined // 只有當有值時才發送，避免空字串 URL 驗證錯誤
+      }
+      
+      // 檢查日期是否有效
+      if (!backendPayload.next_billing_date) {
+        throw new Error('請輸入有效的日期格式（YYYY-MM-DD）')
+      }
+      
+      console.log('發送到後端的數據:', JSON.stringify(backendPayload, null, 2))
+      const result = await api.createSubscription(backendPayload)
+      
+      if (!result.success) {
+        throw new Error(result.error || '創建訂閱失敗')
+      }
+      
+      // 使用後端返回的數據創建本地訂閱對象，添加防護性檢查
+      const backendData = result.data.data // result.data 是整個響應，result.data.data 是實際的訂閱數據
+      
+      console.log('Backend response data:', result.data)
+      console.log('Backend subscription data:', backendData)
+      
+      // 驗證後端返回的 ID
+      if (!backendData || !backendData.id || backendData.id <= 0) {
+        throw new Error('後端返回無效的訂閱 ID')
+      }
+      
       const newSubscription: Subscription = {
-        ...subscription,
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        id: backendData.id,
+        name: backendData.name || '未命名服務',
+        description: backendData.description || '',
+        price: backendData.price || 0,
+        currency: backendData.currency || 'TWD',
+        billingCycle: backendData.billing_cycle || 'monthly',
+        nextBilling: backendData.next_billing_date || new Date().toISOString().split('T')[0],
+        status: backendData.status || 'active',
+        category: backendData.category || '',
+        website: backendData.website || '',
+        createdAt: backendData.created_at || new Date().toISOString(),
+        updatedAt: backendData.updated_at || new Date().toISOString()
       }
       
       // 本地新增
       subscriptions.value.push(newSubscription)
       saveToLocalStorage()
-      
-      // API 調用
-      try {
-        const result = await api.createSubscription(newSubscription)
-        if (!result.success) {
-          console.warn('API 調用失敗，數據已保存到本地')
-        }
-      } catch (apiError) {
-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
-      }
       
       return newSubscription
     } catch (err) {
@@ -233,25 +323,63 @@ export const useSubscriptionStore = defineStore('subscription', () => {
         throw new Error('訂閱不存在')
       }
       
-      const updatedSubscription = {
-        ...subscriptions.value[index],
-        ...updates,
-        updatedAt: new Date().toISOString()
+      const currentSubscription = subscriptions.value[index]
+      const updatedData = {
+        ...currentSubscription,
+        ...updates
+      }
+      
+      // 準備後端 payload
+      const backendPayload = {
+        name: updatedData.name,
+        description: updatedData.description || '',
+        price: Number(updatedData.price),
+        currency: updatedData.currency || 'TWD',
+        billing_cycle: updatedData.billingCycle === 'weekly' ? 'monthly' : updatedData.billingCycle,
+          next_billing_date: formatDateForBackend(updatedData.nextBilling),
+        status: updatedData.status || 'active',
+        category: updatedData.category || '',
+        website: updatedData.website && updatedData.website.trim() !== '' ? updatedData.website : undefined
+      }
+      
+      // 檢查日期是否有效（如果提供了日期）
+      if (backendPayload.next_billing_date === undefined && updatedData.nextBilling) {
+        throw new Error('請輸入有效的日期格式（YYYY-MM-DD）')
+      }
+      
+      // 先調用 API 更新
+      const result = await api.updateSubscription(id.toString(), backendPayload)
+      
+      if (!result.success) {
+        throw new Error(result.error || '更新訂閱失敗')
+      }
+      
+      // 使用後端返回的數據更新本地訂閱，添加防護性檢查
+      const backendData = result.data.data // result.data 是整個響應，result.data.data 是實際的訂閱數據
+      
+      // 驗證後端返回的 ID
+      if (!backendData || !backendData.id || backendData.id <= 0) {
+        throw new Error('後端返回無效的訂閱 ID')
+      }
+      
+      const updatedSubscription: Subscription = {
+        id: backendData.id,
+        name: backendData.name || '未命名服務',
+        description: backendData.description || '',
+        price: backendData.price || 0,
+        currency: backendData.currency || 'TWD',
+        billingCycle: backendData.billing_cycle || 'monthly',
+        nextBilling: backendData.next_billing_date || new Date().toISOString().split('T')[0],
+        status: backendData.status || 'active',
+        category: backendData.category || '',
+        website: backendData.website || '',
+        createdAt: backendData.created_at || new Date().toISOString(),
+        updatedAt: backendData.updated_at || new Date().toISOString()
       }
       
       // 本地更新
       subscriptions.value[index] = updatedSubscription
       saveToLocalStorage()
-      
-      // API 調用
-      try {
-        const result = await api.updateSubscription(id.toString(), updatedSubscription)
-        if (!result.success) {
-          console.warn('API 調用失敗，數據已保存到本地')
-        }
-      } catch (apiError) {
-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
-      }
       
       return updatedSubscription
     } catch (err) {
@@ -271,19 +399,16 @@ export const useSubscriptionStore = defineStore('subscription', () => {
         throw new Error('訂閱不存在')
       }
       
+      // 先調用 API 刪除
+      const result = await api.deleteSubscription(id.toString())
+      
+      if (!result.success) {
+        throw new Error(result.error || '刪除訂閱失敗')
+      }
+      
       // 本地刪除
       subscriptions.value.splice(index, 1)
       saveToLocalStorage()
-      
-      // API 調用
-      try {
-        const result = await api.deleteSubscription(id.toString())
-        if (!result.success) {
-          console.warn('API 調用失敗，數據已保存到本地')
-        }
-      } catch (apiError) {
-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
-      }
       
       return true
     } catch (err) {

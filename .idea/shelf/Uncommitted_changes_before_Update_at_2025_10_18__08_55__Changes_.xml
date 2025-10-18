@@ -1,0 +1,24 @@
+<changelist name="Uncommitted_changes_before_Update_at_2025_10_18_下午_08_55_[Changes]" date="1760792111117" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025_10_18_下午_08_55_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 2025/10/18 下午 08:55 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/@esbuild/win32-x64/esbuild.exe" />
+    <option name="AFTER_PATH" value="node_modules/@esbuild/win32-x64/esbuild.exe" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025_10_18_下午_08_55_[Changes]/esbuild.exe" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/wrangler/node_modules/.bin/esbuild" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/wrangler/node_modules/esbuild/bin/esbuild" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/wrangler/node_modules/.bin/esbuild.cmd" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/wrangler/node_modules/.bin/esbuild.ps1" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/wrangler/node_modules/@esbuild/win32-x64/esbuild.exe" />
+  </binary>
+</changelist>

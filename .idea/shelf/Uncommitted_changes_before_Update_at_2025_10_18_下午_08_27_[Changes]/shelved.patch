@@ -1,0 +1,1547 @@
+Index: node_modules/substracker-frontend/src/api.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// API 服務配置\r\nconst API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787'\r\n\r\n// API 請求封裝\r\nclass ApiService {\r\n  private baseURL: string\r\n\r\n  constructor(baseURL: string) {\r\n    this.baseURL = baseURL\r\n  }\r\n\r\n  // 通用請求方法\r\n  private async request(endpoint: string, options: RequestInit = {}) {\r\n    const url = `${this.baseURL}${endpoint}`\r\n    \r\n    const config: RequestInit = {\r\n      headers: {\r\n        'Content-Type': 'application/json',\r\n        ...options.headers,\r\n      },\r\n      ...options,\r\n    }\r\n\r\n    try {\r\n      const response = await fetch(url, config)\r\n      \r\n      if (!response.ok) {\r\n        throw new Error(`HTTP error! status: ${response.status}`)\r\n      }\r\n      \r\n      const data = await response.json()\r\n      return { success: true, data }\r\n    } catch (error) {\r\n      console.error('API request failed:', error)\r\n      return { \r\n        success: false, \r\n        error: error instanceof Error ? error.message : 'Unknown error' \r\n      }\r\n    }\r\n  }\r\n\r\n  // 測試 API 連接\r\n  async testConnection() {\r\n    return this.request('/')\r\n  }\r\n\r\n  // 健康檢查\r\n  async healthCheck() {\r\n    return this.request('/api/health')\r\n  }\r\n\r\n  // 獲取訂閱列表\r\n  async getSubscriptions() {\r\n    return this.request('/api/subscriptions')\r\n  }\r\n\r\n  // 創建訂閱\r\n  async createSubscription(subscription: any) {\r\n    return this.request('/api/subscriptions', {\r\n      method: 'POST',\r\n      body: JSON.stringify(subscription),\r\n    })\r\n  }\r\n\r\n  // 更新訂閱\r\n  async updateSubscription(id: string, subscription: any) {\r\n    return this.request(`/api/subscriptions/${id}`, {\r\n      method: 'PUT',\r\n      body: JSON.stringify(subscription),\r\n    })\r\n  }\r\n\r\n  // 刪除訂閱\r\n  async deleteSubscription(id: string) {\r\n    return this.request(`/api/subscriptions/${id}`, {\r\n      method: 'DELETE',\r\n    })\r\n  }\r\n}\r\n\r\n// 導出 API 實例\r\nexport const api = new ApiService(API_BASE_URL)\r\nexport default api
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/api.ts b/node_modules/substracker-frontend/src/api.ts
+--- a/node_modules/substracker-frontend/src/api.ts	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/api.ts	(date 1760790422164)
+@@ -1,5 +1,4 @@
+ // API 服務配置
+-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787'
+ 
+ // API 請求封裝
+ class ApiService {
+@@ -20,21 +19,45 @@
+       },
+       ...options,
+     }
++    // 印出請求詳情
++    console.log('=== Frontend API Request ===')
++    console.log('URL:', url)
++    console.log('Method:', config.method || 'GET')
++    console.log('Headers:', config.headers)
++    if (config.body) {
++      console.log('Body:', config.body)
++    }
++    console.log('============================')
+ 
+     try {
+-      const response = await fetch(url, config)
++      const res = await fetch(url, config)
++      const text = await res.text() // 不要直接 res.json()，先拿 raw 文字
++      
++      // 記錄響應詳情
++      console.log('=== Frontend API Response ===')
++      console.log('Status:', res.status)
++      console.log('Response body:', text)
++      console.log('=============================')
+       
+-      if (!response.ok) {
+-        throw new Error(`HTTP error! status: ${response.status}`)
++      if (!res.ok) {
++        console.error('API error body:', text) // 這裡會看到 zod/schema 的錯誤細節
++        try {
++          const errorData = JSON.parse(text)
++          if (errorData.issues) {
++            console.error('Zod validation issues:', errorData.issues)
++          }
++        } catch (e) {
++          // 如果不是 JSON，直接顯示文字
++        }
++        throw new Error(`HTTP ${res.status}: ${text}`)
+       }
+       
+-      const data = await response.json()
+-      return { success: true, data }
++      return { success: true, data: text ? JSON.parse(text) : null }
+     } catch (error) {
+       console.error('API request failed:', error)
+       return { 
+         success: false, 
+-        error: error instanceof Error ? error.message : 'Unknown error' 
++        error: error instanceof Error ? error.message : 'Unknown error'
+       }
+     }
+   }
+@@ -78,6 +101,9 @@
+   }
+ }
+ 
++// API Base URL - 更新為你的後端 URL
++const API_BASE_URL = 'https://subs-backend.andy9729701.workers.dev'
++
+ // 導出 API 實例
+ export const api = new ApiService(API_BASE_URL)
+-export default api
+\ No newline at end of file
++export default api
+Index: node_modules/substracker-frontend/src/assets/index.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@tailwind base;\r\n@tailwind components;\r\n@tailwind utilities;\r\n\r\n/* 自定義組件樣式 */\r\n@layer components {\r\n  .btn-primary {\r\n    @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md;\r\n  }\r\n\r\n  .btn-secondary {\r\n    @apply bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md border border-gray-300;\r\n  }\r\n\r\n  .btn-icon {\r\n    @apply p-2 rounded-lg hover:bg-gray-100;\r\n  }\r\n\r\n  .card {\r\n    @apply bg-white shadow rounded-lg p-6;\r\n  }\r\n\r\n  .form-label {\r\n    @apply block text-sm font-medium text-gray-700 mb-2;\r\n  }\r\n\r\n  .form-input {\r\n    @apply w-full px-3 py-2 border border-gray-300 rounded-md;\r\n  }\r\n\r\n  .form-select {\r\n    @apply w-full px-3 py-2 border border-gray-300 rounded-md;\r\n  }\r\n\r\n  .form-textarea {\r\n    @apply w-full px-3 py-2 border border-gray-300 rounded-md resize-none;\r\n  }\r\n\r\n  .form-error {\r\n    @apply mt-1 text-sm text-red-600;\r\n  }\r\n\r\n  .status-badge {\r\n    @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full;\r\n  }\r\n\r\n  .status-badge-active {\r\n    @apply bg-green-100 text-green-800;\r\n  }\r\n  \r\n  .status-badge-inactive {\r\n    @apply bg-red-100 text-red-800;\r\n  }\r\n  \r\n  .status-badge-pending {\r\n    @apply bg-yellow-100 text-yellow-800;\r\n  }\r\n\r\n  .subscription-card {\r\n    @apply bg-white rounded-lg shadow border border-gray-200 p-6;\r\n  }\r\n\r\n  .modal-overlay {\r\n    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;\r\n  }\r\n\r\n  .modal-container {\r\n    @apply bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden;\r\n  }\r\n}\r\n\r\n/* 自定義動畫 */\r\n@keyframes fadeIn {\r\n  from {\r\n    opacity: 0;\r\n    transform: translateY(10px);\r\n  }\r\n  to {\r\n    opacity: 1;\r\n    transform: translateY(0);\r\n  }\r\n}\r\n\r\n@keyframes slideIn {\r\n  from {\r\n    transform: translateX(-100%);\r\n  }\r\n  to {\r\n    transform: translateX(0);\r\n  }\r\n}\r\n\r\n.animate-fade-in {\r\n  animation: fadeIn 0.3s ease-out;\r\n}\r\n\r\n.animate-slide-in {\r\n  animation: slideIn 0.3s ease-out;\r\n}\r\n\r\n/* 響應式設計增強 */\r\n@media (max-width: 640px) {\r\n  .subscription-card {\r\n    @apply p-4;\r\n  }\r\n  \r\n  .modal-container {\r\n    @apply mx-4 max-w-none;\r\n  }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/assets/index.css b/node_modules/substracker-frontend/src/assets/index.css
+--- a/node_modules/substracker-frontend/src/assets/index.css	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/assets/index.css	(date 1760790422165)
+@@ -2,6 +2,17 @@
+ @tailwind components;
+ @tailwind utilities;
+ 
++/* 修復 text-size-adjust 警告 - 支援所有瀏覽器 */
++@layer base {
++  html,
++  :host {
++    -webkit-text-size-adjust: 100% !important;
++    -moz-text-size-adjust: 100% !important;
++    -ms-text-size-adjust: 100% !important;
++    text-size-adjust: 100% !important;
++  }
++}
++
+ /* 自定義組件樣式 */
+ @layer components {
+   .btn-primary {
+Index: node_modules/substracker-frontend/src/components/SubscriptionList.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><template>\r\n  <div class=\"subscription-list\">\r\n    <!-- 簡單搜索 -->\r\n    <div class=\"mb-6\">\r\n      <div class=\"relative\">\r\n        <div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\">\r\n          <svg class=\"h-5 w-5 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z\" />\r\n          </svg>\r\n        </div>\r\n        <input\r\n          v-model=\"searchQuery\"\r\n          type=\"text\"\r\n          placeholder=\"搜索訂閱服務...\"\r\n          class=\"block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500\"\r\n        />\r\n      </div>\r\n    </div>\r\n\r\n    <!-- 訂閱列表 -->\r\n    <div v-if=\"filteredSubscriptions.length > 0\" class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">\r\n      <SubscriptionCard\r\n        v-for=\"subscription in filteredSubscriptions\"\r\n        :key=\"subscription.id\"\r\n        :subscription=\"subscription\"\r\n        @edit=\"(subscription) => $emit('edit', subscription)\"\r\n        @delete=\"(id) => $emit('delete', id)\"\r\n        @status-change=\"(id, status) => $emit('statusChange', id, status)\"\r\n      />\r\n    </div>\r\n\r\n    <!-- 空狀態 -->\r\n    <div v-else class=\"text-center py-12\">\r\n      <svg class=\"mx-auto h-12 w-12 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n        <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2\" />\r\n      </svg>\r\n      <h3 class=\"mt-2 text-sm font-medium text-gray-900\">沒有找到訂閱</h3>\r\n      <p class=\"mt-1 text-sm text-gray-500\">\r\n        {{ searchQuery ? '嘗試調整搜索條件' : '開始新增您的第一個訂閱服務' }}\r\n      </p>\r\n    </div>\r\n  </div>\r\n</template>\r\n\r\n<script setup lang=\"ts\">\r\nimport { ref, computed } from 'vue'\r\nimport type { Subscription } from '@/stores'\r\nimport SubscriptionCard from './SubscriptionCard.vue'\r\n\r\ninterface Props {\r\n  subscriptions: Subscription[]\r\n  loading?: boolean\r\n}\r\n\r\ninterface Emits {\r\n  edit: [subscription: Subscription]\r\n  delete: [id: number]\r\n  statusChange: [id: number, status: string]\r\n}\r\n\r\nconst props = defineProps<Props>()\r\ndefineEmits<Emits>()\r\n\r\n// 搜索狀態\r\nconst searchQuery = ref('')\r\n\r\n// 篩選後的訂閱列表\r\nconst filteredSubscriptions = computed(() => {\r\n  let result = [...props.subscriptions]\r\n\r\n  // 搜索篩選\r\n  if (searchQuery.value) {\r\n    const query = searchQuery.value.toLowerCase()\r\n    result = result.filter(sub => \r\n      sub.name.toLowerCase().includes(query) ||\r\n      (sub.description && sub.description.toLowerCase().includes(query)) ||\r\n      sub.category.toLowerCase().includes(query)\r\n    )\r\n  }\r\n\r\n  return result\r\n})\r\n</script>\r\n\r\n<style scoped lang=\"postcss\">\r\n.subscription-list {\r\n  @apply w-full;\r\n}\r\n\r\n/* 響應式調整 */\r\n@media (max-width: 768px) {\r\n  .subscription-list {\r\n    @apply px-4;\r\n  }\r\n}\r\n</style>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/components/SubscriptionList.vue b/node_modules/substracker-frontend/src/components/SubscriptionList.vue
+--- a/node_modules/substracker-frontend/src/components/SubscriptionList.vue	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/components/SubscriptionList.vue	(date 1760790422166)
+@@ -9,6 +9,7 @@
+           </svg>
+         </div>
+         <input
++          id="searchQuery"
+           v-model="searchQuery"
+           type="text"
+           placeholder="搜索訂閱服務..."
+Index: node_modules/substracker-frontend/src/pages/Settings.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><template>\r\n  <div class=\"px-4 sm:px-0\">\r\n    <div class=\"sm:flex sm:items-center\">\r\n      <div class=\"sm:flex-auto\">\r\n        <h1 class=\"text-2xl font-semibold text-gray-900\">設定</h1>\r\n        <p class=\"mt-2 text-sm text-gray-700\">管理您的帳戶設定和偏好</p>\r\n      </div>\r\n    </div>\r\n    \r\n    <div class=\"mt-8 space-y-6\">\r\n      <!-- 個人資料 -->\r\n      <div class=\"card\">\r\n        <h3 class=\"text-lg font-medium text-gray-900 mb-4\">個人資料</h3>\r\n        \r\n        <div class=\"space-y-4\">\r\n          <div>\r\n            <label class=\"block text-sm font-medium text-gray-700\">姓名</label>\r\n            <input\r\n              v-model=\"pageStore.settings.profile.name\"\r\n              type=\"text\"\r\n              class=\"mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500\"\r\n            />\r\n          </div>\r\n          \r\n        </div>\r\n        \r\n        <div class=\"mt-6\">\r\n          <button @click=\"saveProfile\" class=\"btn-primary\">\r\n            儲存變更\r\n          </button>\r\n        </div>\r\n      </div>\r\n      \r\n      <!-- 通知設定 -->\r\n      <div class=\"card\">\r\n        <h3 class=\"text-lg font-medium text-gray-900 mb-4\">通知設定</h3>\r\n        \r\n        <div class=\"space-y-4\">\r\n          <div class=\"flex items-center justify-between\">\r\n            <div>\r\n              <h4 class=\"font-medium text-gray-900\">扣款提醒</h4>\r\n              <p class=\"text-sm text-gray-500\">在扣款前 3 天發送提醒</p>\r\n            </div>\r\n            <input\r\n              v-model=\"pageStore.settings.notifications.billing\"\r\n              type=\"checkbox\"\r\n              class=\"h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded\"\r\n            />\r\n          </div>\r\n          \r\n          <div class=\"flex items-center justify-between\">\r\n            <div>\r\n              <h4 class=\"font-medium text-gray-900\">月度報告</h4>\r\n              <p class=\"text-sm text-gray-500\">每月發送支出統計報告</p>\r\n            </div>\r\n            <input\r\n              v-model=\"pageStore.settings.notifications.monthly\"\r\n              type=\"checkbox\"\r\n              class=\"h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded\"\r\n            />\r\n          </div>\r\n          \r\n          <div class=\"flex items-center justify-between\">\r\n            <div>\r\n              <h4 class=\"font-medium text-gray-900\">農曆顯示</h4>\r\n              <p class=\"text-sm text-gray-500\">在日期旁顯示農曆資訊</p>\r\n            </div>\r\n            <input\r\n              v-model=\"pageStore.settings.notifications.lunar\"\r\n              type=\"checkbox\"\r\n              class=\"h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded\"\r\n            />\r\n          </div>\r\n        </div>\r\n      </div>\r\n      \r\n      <!-- 危險區域 -->\r\n      <div class=\"card border-red-200\">\r\n        <h3 class=\"text-lg font-medium text-red-900 mb-4\">危險區域</h3>\r\n        \r\n        <div class=\"space-y-4\">\r\n          <button class=\"bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors\">\r\n            刪除帳戶\r\n          </button>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</template>\r\n\r\n<script setup lang=\"ts\">\r\nimport { usePageStore } from '@/stores'\r\n\r\n// 定義組件名稱，用於 keep-alive\r\ndefineOptions({\r\n  name: 'Settings'\r\n})\r\n\r\nconst pageStore = usePageStore()\r\n\r\n// 儲存個人資料\r\nfunction saveProfile() {\r\n  // 這裡可以新增 API 調用來保存資料\r\n  console.log('儲存個人資料:', pageStore.settings.profile)\r\n  alert('個人資料已儲存！')\r\n}\r\n</script>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/pages/Settings.vue b/node_modules/substracker-frontend/src/pages/Settings.vue
+--- a/node_modules/substracker-frontend/src/pages/Settings.vue	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/pages/Settings.vue	(date 1760790422166)
+@@ -14,8 +14,9 @@
+         
+         <div class="space-y-4">
+           <div>
+-            <label class="block text-sm font-medium text-gray-700">姓名</label>
++            <label for="profileName" class="block text-sm font-medium text-gray-700">姓名</label>
+             <input
++              id="profileName"
+               v-model="pageStore.settings.profile.name"
+               type="text"
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+@@ -42,6 +43,7 @@
+               <p class="text-sm text-gray-500">在扣款前 3 天發送提醒</p>
+             </div>
+             <input
++              id="billingNotification"
+               v-model="pageStore.settings.notifications.billing"
+               type="checkbox"
+               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+@@ -54,6 +56,7 @@
+               <p class="text-sm text-gray-500">每月發送支出統計報告</p>
+             </div>
+             <input
++              id="monthlyNotification"
+               v-model="pageStore.settings.notifications.monthly"
+               type="checkbox"
+               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+@@ -66,6 +69,7 @@
+               <p class="text-sm text-gray-500">在日期旁顯示農曆資訊</p>
+             </div>
+             <input
++              id="lunarNotification"
+               v-model="pageStore.settings.notifications.lunar"
+               type="checkbox"
+               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+Index: node_modules/substracker-frontend/src/components/SubscriptionCard.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><template>\r\n  <div class=\"subscription-card group\">\r\n    <!-- 卡片頭部 -->\r\n    <div class=\"flex items-start justify-between mb-4\">\r\n      <div class=\"flex items-center space-x-3\">\r\n        <div class=\"subscription-logo\">\r\n          <img\r\n            v-if=\"subscription.logo\"\r\n            :src=\"subscription.logo\"\r\n            :alt=\"subscription.name\"\r\n            class=\"w-full h-full object-cover\"\r\n          />\r\n          <span v-else class=\"text-lg font-semibold text-gray-600\">\r\n            {{ subscription.name.charAt(0) }}\r\n          </span>\r\n        </div>\r\n        <div>\r\n          <h3 class=\"font-semibold text-gray-900 group-hover:text-blue-600 transition-colors\">\r\n            {{ subscription.name }}\r\n          </h3>\r\n          <p v-if=\"subscription.description\" class=\"text-sm text-gray-500 mt-1\">\r\n            {{ subscription.description }}\r\n          </p>\r\n        </div>\r\n      </div>\r\n      \r\n      <!-- 狀態標籤 -->\r\n      <span :class=\"statusClasses\" class=\"status-badge\">\r\n        {{ statusText }}\r\n      </span>\r\n    </div>\r\n    \r\n    <!-- 價格信息 -->\r\n    <div class=\"flex items-center justify-between mb-4\">\r\n      <div>\r\n        <div class=\"flex items-baseline space-x-1\">\r\n          <span class=\"text-2xl font-bold text-gray-900\">\r\n            {{ formatPrice(subscription.price) }}\r\n          </span>\r\n          <span class=\"text-sm text-gray-500\">\r\n            / {{ subscription.billingCycle === 'monthly' ? '月' : '年' }}\r\n          </span>\r\n        </div>\r\n        <p class=\"text-sm text-gray-500 mt-1\">\r\n          分類：{{ subscription.category }}\r\n        </p>\r\n      </div>\r\n    </div>\r\n    \r\n    <!-- 下次扣款 -->\r\n    <div class=\"flex items-center justify-between mb-4\">\r\n      <div class=\"flex items-center space-x-2\">\r\n        <svg class=\"w-4 h-4 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n          <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\" />\r\n        </svg>\r\n        <span class=\"text-sm text-gray-600\">\r\n          下次扣款：{{ formatDate(subscription.nextBilling) }}\r\n        </span>\r\n      </div>\r\n      <span :class=\"billingUrgencyClasses\" class=\"text-xs px-2 py-1 rounded-full\">\r\n        {{ billingUrgencyText }}\r\n      </span>\r\n    </div>\r\n    \r\n    <!-- 操作按鈕 -->\r\n    <div class=\"flex items-center justify-between pt-4 border-t border-gray-100\">\r\n      <div class=\"flex space-x-2\">\r\n        <button \r\n          @click=\"$emit('edit', subscription)\"\r\n          class=\"btn-icon text-blue-600 hover:text-blue-800 hover:bg-blue-50\"\r\n          title=\"編輯\"\r\n        >\r\n          <svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z\" />\r\n          </svg>\r\n        </button>\r\n        \r\n        \r\n        <button \r\n          @click=\"toggleStatus\"\r\n          :class=\"subscription.status === 'active' ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'\"\r\n          class=\"btn-icon\"\r\n          :title=\"subscription.status === 'active' ? '暫停' : '啟用'\"\r\n        >\r\n          <svg v-if=\"subscription.status === 'active'\" class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z\" />\r\n          </svg>\r\n          <svg v-else class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-9-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\" />\r\n          </svg>\r\n        </button>\r\n      </div>\r\n      \r\n      <button \r\n        @click=\"$emit('delete', subscription.id)\"\r\n        class=\"btn-icon text-red-600 hover:text-red-800 hover:bg-red-50\"\r\n        title=\"刪除\"\r\n      >\r\n        <svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n          <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16\" />\r\n        </svg>\r\n      </button>\r\n    </div>\r\n  </div>\r\n</template>\r\n\r\n<script setup lang=\"ts\">\r\nimport { computed } from 'vue'\r\nimport type { Subscription } from '@/stores'\r\n\r\ninterface Props {\r\n  subscription: Subscription\r\n}\r\n\r\ninterface Emits {\r\n  edit: [subscription: Subscription]\r\n  delete: [id: number]\r\n  statusChange: [id: number, status: string]\r\n}\r\n\r\nconst props = defineProps<Props>()\r\nconst emit = defineEmits<Emits>()\r\n\r\n// 狀態樣式\r\nconst statusClasses = computed(() => {\r\n  const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full'\r\n  switch (props.subscription.status) {\r\n    case 'active':\r\n      return `${baseClasses} bg-green-100 text-green-800`\r\n    case 'paused':\r\n      return `${baseClasses} bg-yellow-100 text-yellow-800`\r\n    case 'cancelled':\r\n      return `${baseClasses} bg-red-100 text-red-800`\r\n    default:\r\n      return `${baseClasses} bg-gray-100 text-gray-800`\r\n  }\r\n})\r\n\r\nconst statusText = computed(() => {\r\n  switch (props.subscription.status) {\r\n    case 'active': return '活躍'\r\n    case 'paused': return '暫停'\r\n    case 'cancelled': return '已取消'\r\n    default: return '未知'\r\n  }\r\n})\r\n\r\n// 扣款緊急程度\r\nconst billingUrgencyClasses = computed(() => {\r\n  const daysUntilBilling = getDaysUntilBilling()\r\n  const baseClasses = 'font-medium'\r\n  \r\n  if (daysUntilBilling <= 3) {\r\n    return `${baseClasses} bg-red-100 text-red-800`\r\n  } else if (daysUntilBilling <= 7) {\r\n    return `${baseClasses} bg-yellow-100 text-yellow-800`\r\n  } else {\r\n    return `${baseClasses} bg-gray-100 text-gray-600`\r\n  }\r\n})\r\n\r\nconst billingUrgencyText = computed(() => {\r\n  const days = getDaysUntilBilling()\r\n  if (days < 0) return '已過期'\r\n  if (days === 0) return '今天'\r\n  if (days === 1) return '明天'\r\n  return `${days} 天後`\r\n})\r\n\r\n// 工具函數\r\nfunction getDaysUntilBilling(): number {\r\n  const nextBilling = new Date(props.subscription.nextBilling)\r\n  const today = new Date()\r\n  const diffTime = nextBilling.getTime() - today.getTime()\r\n  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))\r\n}\r\n\r\nfunction formatPrice(price: number): string {\r\n  return new Intl.NumberFormat('zh-TW', {\r\n    style: 'currency',\r\n    currency: 'TWD',\r\n    minimumFractionDigits: 0\r\n  }).format(price)\r\n}\r\n\r\nfunction formatDate(dateString: string): string {\r\n  const date = new Date(dateString)\r\n  return new Intl.DateTimeFormat('zh-TW', {\r\n    year: 'numeric',\r\n    month: '2-digit',\r\n    day: '2-digit'\r\n  }).format(date)\r\n}\r\n\r\n\r\nfunction toggleStatus() {\r\n  const newStatus = props.subscription.status === 'active' ? 'paused' : 'active'\r\n  emit('statusChange', props.subscription.id, newStatus)\r\n}\r\n</script>\r\n\r\n<style scoped lang=\"postcss\">\r\n.subscription-card {\r\n  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;\r\n}\r\n\r\n.subscription-logo {\r\n  @apply w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0;\r\n}\r\n\r\n.btn-icon {\r\n  @apply p-2 rounded-lg transition-colors duration-200;\r\n}\r\n\r\n.status-badge {\r\n  @apply inline-flex items-center;\r\n}\r\n</style>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/components/SubscriptionCard.vue b/node_modules/substracker-frontend/src/components/SubscriptionCard.vue
+--- a/node_modules/substracker-frontend/src/components/SubscriptionCard.vue	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/components/SubscriptionCard.vue	(date 1760790422165)
+@@ -11,12 +11,12 @@
+             class="w-full h-full object-cover"
+           />
+           <span v-else class="text-lg font-semibold text-gray-600">
+-            {{ subscription.name.charAt(0) }}
++            {{ subscription.name?.charAt(0) || '?' }}
+           </span>
+         </div>
+         <div>
+           <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+-            {{ subscription.name }}
++            {{ subscription.name || '未命名服務' }}
+           </h3>
+           <p v-if="subscription.description" class="text-sm text-gray-500 mt-1">
+             {{ subscription.description }}
+@@ -168,7 +168,22 @@
+ })
+ 
+ // 工具函數
++function isValidDate(dateString: string): boolean {
++  try {
++    const date = new Date(dateString)
++    return !Number.isNaN(date.getTime()) && 
++           date.getFullYear() > 1900 && 
++           date.getFullYear() < 2100
++  } catch {
++    return false
++  }
++}
++
+ function getDaysUntilBilling(): number {
++  if (!isValidDate(props.subscription.nextBilling)) {
++    return 0 // 如果日期無效，返回 0
++  }
++  
+   const nextBilling = new Date(props.subscription.nextBilling)
+   const today = new Date()
+   const diffTime = nextBilling.getTime() - today.getTime()
+@@ -184,6 +199,10 @@
+ }
+ 
+ function formatDate(dateString: string): string {
++  if (!isValidDate(dateString)) {
++    return '日期無效' // 如果日期無效，返回錯誤訊息
++  }
++  
+   const date = new Date(dateString)
+   return new Intl.DateTimeFormat('zh-TW', {
+     year: 'numeric',
+Index: node_modules/substracker-frontend/src/components/SubscriptionForm.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><template>\r\n  <form @submit.prevent=\"handleSubmit\" class=\"space-y-6\">\r\n    <!-- 基本信息 -->\r\n    <div class=\"grid grid-cols-1 md:grid-cols-2 gap-6\">\r\n      <div>\r\n        <label for=\"name\" class=\"form-label\">服務名稱 *</label>\r\n        <input\r\n          id=\"name\"\r\n          v-model=\"form.name\"\r\n          type=\"text\"\r\n          required\r\n          class=\"form-input\"\r\n          :class=\"{ 'border-red-300': errors.name }\"\r\n          placeholder=\"例如：Netflix\"\r\n        />\r\n        <p v-if=\"errors.name\" class=\"form-error\">{{ errors.name }}</p>\r\n      </div>\r\n      \r\n      <div>\r\n        <label for=\"category\" class=\"form-label\">分類 *</label>\r\n        <select\r\n          id=\"category\"\r\n          v-model=\"form.category\"\r\n          required\r\n          class=\"form-select\"\r\n          :class=\"{ 'border-red-300': errors.category }\"\r\n        >\r\n          <option value=\"\">請選擇分類</option>\r\n          <option value=\"娛樂\">娛樂</option>\r\n          <option value=\"工具\">工具</option>\r\n          <option value=\"教育\">教育</option>\r\n          <option value=\"健康\">健康</option>\r\n          <option value=\"新聞\">新聞</option>\r\n          <option value=\"其他\">其他</option>\r\n        </select>\r\n        <p v-if=\"errors.category\" class=\"form-error\">{{ errors.category }}</p>\r\n      </div>\r\n    </div>\r\n    \r\n    <!-- 描述 -->\r\n    <div>\r\n      <label for=\"description\" class=\"form-label\">描述</label>\r\n      <textarea\r\n        id=\"description\"\r\n        v-model=\"form.description\"\r\n        rows=\"3\"\r\n        class=\"form-textarea\"\r\n        placeholder=\"簡短描述這個服務...\"\r\n      ></textarea>\r\n    </div>\r\n    \r\n    <!-- 價格信息 -->\r\n    <div class=\"grid grid-cols-1 md:grid-cols-3 gap-6\">\r\n      <div>\r\n        <label for=\"price\" class=\"form-label\">價格 *</label>\r\n        <div class=\"relative\">\r\n          <span class=\"absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500\">NT$</span>\r\n          <input\r\n            id=\"price\"\r\n            v-model.number=\"form.price\"\r\n            type=\"number\"\r\n            min=\"0\"\r\n            step=\"1\"\r\n            required\r\n            class=\"form-input pl-12 text-right\"\r\n            :class=\"{ 'border-red-300': errors.price }\"\r\n            placeholder=\"390\"\r\n          />\r\n        </div>\r\n        <p v-if=\"errors.price\" class=\"form-error\">{{ errors.price }}</p>\r\n      </div>\r\n      \r\n      <div>\r\n        <label for=\"billingCycle\" class=\"form-label\">計費週期 *</label>\r\n        <select\r\n          id=\"billingCycle\"\r\n          v-model=\"form.billingCycle\"\r\n          required\r\n          class=\"form-select\"\r\n          :class=\"{ 'border-red-300': errors.billingCycle }\"\r\n        >\r\n          <option value=\"monthly\">每月</option>\r\n          <option value=\"yearly\">每年</option>\r\n        </select>\r\n        <p v-if=\"errors.billingCycle\" class=\"form-error\">{{ errors.billingCycle }}</p>\r\n      </div>\r\n      \r\n      <div>\r\n        <label for=\"status\" class=\"form-label\">狀態</label>\r\n        <select\r\n          id=\"status\"\r\n          v-model=\"form.status\"\r\n          class=\"form-select\"\r\n        >\r\n          <option value=\"active\">活躍</option>\r\n          <option value=\"paused\">暫停</option>\r\n          <option value=\"cancelled\">已取消</option>\r\n        </select>\r\n      </div>\r\n    </div>\r\n    \r\n    <!-- 下次扣款日期 -->\r\n    <div>\r\n      <label for=\"nextBilling\" class=\"form-label\">下次扣款日期 *</label>\r\n      <input\r\n        id=\"nextBilling\"\r\n        v-model=\"form.nextBilling\"\r\n        type=\"date\"\r\n        required\r\n        class=\"form-input\"\r\n        :class=\"{ 'border-red-300': errors.nextBilling }\"\r\n        :min=\"today\"\r\n      />\r\n      <p v-if=\"errors.nextBilling\" class=\"form-error\">{{ errors.nextBilling }}</p>\r\n    </div>\r\n    \r\n    <!-- 網站 URL -->\r\n    <div>\r\n      <label for=\"website\" class=\"form-label\">官方網站</label>\r\n      <input\r\n        id=\"website\"\r\n        v-model=\"form.website\"\r\n        type=\"url\"\r\n        class=\"form-input\"\r\n        :class=\"{ 'border-red-300': errors.website }\"\r\n        placeholder=\"https://example.com\"\r\n      />\r\n      <p v-if=\"errors.website\" class=\"form-error\">{{ errors.website }}</p>\r\n    </div>\r\n    \r\n    <!-- 提交按鈕 -->\r\n    <div class=\"flex justify-end space-x-3 pt-6 border-t border-gray-200\">\r\n      <button\r\n        type=\"button\"\r\n        @click=\"$emit('cancel')\"\r\n        class=\"btn-secondary\"\r\n      >\r\n        取消\r\n      </button>\r\n      <button\r\n        type=\"submit\"\r\n        :disabled=\"loading\"\r\n        class=\"btn-primary\"\r\n      >\r\n        {{ loading ? '保存中...' : (isEdit ? '更新' : '創建') }}\r\n      </button>\r\n    </div>\r\n  </form>\r\n</template>\r\n\r\n<script setup lang=\"ts\">\r\nimport { ref, computed, watch } from 'vue'\r\nimport type { Subscription } from '@/stores'\r\n\r\ninterface Props {\r\n  subscription?: Subscription\r\n  loading?: boolean\r\n}\r\n\r\ninterface Emits {\r\n  submit: [data: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>]\r\n  cancel: []\r\n}\r\n\r\nconst props = defineProps<Props>()\r\nconst emit = defineEmits<Emits>()\r\n\r\nconst isEdit = computed(() => !!props.subscription)\r\n\r\n// 表單數據\r\nconst form = ref({\r\n  name: '',\r\n  description: '',\r\n  price: 0,\r\n  currency: 'TWD',\r\n  billingCycle: 'monthly' as 'monthly' | 'yearly',\r\n  nextBilling: '',\r\n  status: 'active' as 'active' | 'paused' | 'cancelled',\r\n  category: '',\r\n  website: ''\r\n})\r\n\r\n// 錯誤狀態\r\nconst errors = ref<Record<string, string>>({})\r\n\r\n// 今天的日期（用於日期輸入的最小值）\r\nconst today = computed(() => {\r\n  return new Date().toISOString().split('T')[0]\r\n})\r\n\r\n// 監聽 props 變化，初始化表單\r\nwatch(\r\n  () => props.subscription,\r\n  (subscription) => {\r\n    if (subscription) {\r\n      form.value = {\r\n        name: subscription.name,\r\n        description: subscription.description || '',\r\n        price: subscription.price,\r\n        currency: subscription.currency,\r\n        billingCycle: subscription.billingCycle,\r\n        nextBilling: subscription.nextBilling.split('T')[0], // 只取日期部分\r\n        status: subscription.status,\r\n        category: subscription.category,\r\n        website: subscription.website || ''\r\n      }\r\n    } else {\r\n      // 重置表單\r\n      form.value = {\r\n        name: '',\r\n        description: '',\r\n        price: 0,\r\n        currency: 'TWD',\r\n        billingCycle: 'monthly',\r\n        nextBilling: '',\r\n        status: 'active',\r\n        category: '',\r\n        website: ''\r\n      }\r\n    }\r\n    errors.value = {}\r\n  },\r\n  { immediate: true }\r\n)\r\n\r\n// 表單驗證\r\nfunction validateForm(): boolean {\r\n  errors.value = {}\r\n  \r\n  if (!form.value.name.trim()) {\r\n    errors.value.name = '服務名稱為必填項'\r\n  }\r\n  \r\n  if (!form.value.category) {\r\n    errors.value.category = '請選擇分類'\r\n  }\r\n  \r\n  if (form.value.price <= 0) {\r\n    errors.value.price = '價格必須大於 0'\r\n  }\r\n  \r\n  if (!form.value.nextBilling) {\r\n    errors.value.nextBilling = '請選擇下次扣款日期'\r\n  }\r\n  \r\n  return Object.keys(errors.value).length === 0\r\n}\r\n\r\n// 提交表單\r\nfunction handleSubmit() {\r\n  if (!validateForm()) {\r\n    return\r\n  }\r\n  \r\n  const submitData = {\r\n    ...form.value,\r\n    nextBilling: new Date(form.value.nextBilling).toISOString()\r\n  }\r\n  \r\n  emit('submit', submitData)\r\n}\r\n</script>\r\n\r\n<style scoped lang=\"postcss\">\r\n.form-label {\r\n  @apply block text-sm font-medium text-gray-700 mb-2;\r\n}\r\n\r\n.form-input {\r\n  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;\r\n}\r\n\r\n.form-select {\r\n  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;\r\n}\r\n\r\n.form-textarea {\r\n  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none;\r\n}\r\n\r\n.form-error {\r\n  @apply mt-1 text-sm text-red-600;\r\n}\r\n</style>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/components/SubscriptionForm.vue b/node_modules/substracker-frontend/src/components/SubscriptionForm.vue
+--- a/node_modules/substracker-frontend/src/components/SubscriptionForm.vue	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/components/SubscriptionForm.vue	(date 1760790422166)
+@@ -79,6 +79,7 @@
+           class="form-select"
+           :class="{ 'border-red-300': errors.billingCycle }"
+         >
++          <option value="weekly">每週</option>
+           <option value="monthly">每月</option>
+           <option value="yearly">每年</option>
+         </select>
+@@ -110,6 +111,7 @@
+         class="form-input"
+         :class="{ 'border-red-300': errors.nextBilling }"
+         :min="today"
++        :max="maxDate"
+       />
+       <p v-if="errors.nextBilling" class="form-error">{{ errors.nextBilling }}</p>
+     </div>
+@@ -173,7 +175,7 @@
+   description: '',
+   price: 0,
+   currency: 'TWD',
+-  billingCycle: 'monthly' as 'monthly' | 'yearly',
++  billingCycle: 'monthly' as 'monthly' | 'yearly' | 'weekly',
+   nextBilling: '',
+   status: 'active' as 'active' | 'paused' | 'cancelled',
+   category: '',
+@@ -188,6 +190,11 @@
+   return new Date().toISOString().split('T')[0]
+ })
+ 
++// 最大日期（2100年12月31日）
++const maxDate = computed(() => {
++  return '2100-12-31'
++})
++
+ // 監聽 props 變化，初始化表單
+ watch(
+   () => props.subscription,
+@@ -241,6 +248,12 @@
+   
+   if (!form.value.nextBilling) {
+     errors.value.nextBilling = '請選擇下次扣款日期'
++  } else {
++    // 驗證日期格式
++    const date = new Date(form.value.nextBilling)
++    if (Number.isNaN(date.getTime()) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
++      errors.value.nextBilling = '請輸入有效的日期（年份應在 1900-2100 之間）'
++    }
+   }
+   
+   return Object.keys(errors.value).length === 0
+@@ -252,11 +265,19 @@
+     return
+   }
+   
++  // 確保日期格式正確
++  const date = new Date(form.value.nextBilling)
++  if (Number.isNaN(date.getTime())) {
++    errors.value.nextBilling = '請輸入有效的日期'
++    return
++  }
++  
+   const submitData = {
+     ...form.value,
+-    nextBilling: new Date(form.value.nextBilling).toISOString()
++    nextBilling: date.toISOString()
+   }
+   
++  console.log('表單提交的數據:', JSON.stringify(submitData, null, 2))
+   emit('submit', submitData)
+ }
+ </script>
+Index: node_modules/subs-backend/src/types.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>export interface Subscription {\r\n  /** 訂閱服務的唯一識別碼 */\r\n  id: string\r\n  \r\n  /** 訂閱服務名稱 */\r\n  name: string\r\n  \r\n  /** 下次續約日期 (ISO 8601 格式) */\r\n  renewAt: string\r\n  \r\n  /** 訂閱費用 */\r\n  price: number\r\n  \r\n  /** 貨幣代碼 (例如: TWD, USD) */\r\n  currency: string\r\n  \r\n  /** 計費週期 */\r\n  billingCycle: 'monthly' | 'yearly' | 'weekly'\r\n  \r\n  /** 訂閱狀態 */\r\n  status: 'active' | 'cancelled' | 'expired'\r\n  \r\n  /** 備註 (可選) */\r\n  note?: string\r\n  \r\n  /** 提前幾天通知 (可選，預設為 3 天) */\r\n  notifyBeforeDays?: number\r\n  \r\n  /** 建立時間 */\r\n  createdAt: string\r\n  \r\n  /** 最後更新時間 */\r\n  updatedAt: string\r\n}\r\n\r\nexport interface CreateSubscriptionRequest {\r\n  name: string\r\n  renewAt: string\r\n  price: number\r\n  currency: string\r\n  billingCycle: 'monthly' | 'yearly' | 'weekly'\r\n  note?: string\r\n  notifyBeforeDays?: number\r\n}\r\n\r\nexport interface UpdateSubscriptionRequest extends Partial<CreateSubscriptionRequest> {\r\n  status?: 'active' | 'cancelled' | 'expired'\r\n}\r\n\r\nexport interface ApiResponse<T = any> {\r\n  success: boolean\r\n  data?: T\r\n  error?: string\r\n  message?: string\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/subs-backend/src/types.ts b/node_modules/subs-backend/src/types.ts
+--- a/node_modules/subs-backend/src/types.ts	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/subs-backend/src/types.ts	(date 1760790422163)
+@@ -1,12 +1,12 @@
+ export interface Subscription {
+   /** 訂閱服務的唯一識別碼 */
+-  id: string
++  id: number
+   
+   /** 訂閱服務名稱 */
+   name: string
+   
+-  /** 下次續約日期 (ISO 8601 格式) */
+-  renewAt: string
++  /** 訂閱服務描述 */
++  description?: string
+   
+   /** 訂閱費用 */
+   price: number
+@@ -15,36 +15,46 @@
+   currency: string
+   
+   /** 計費週期 */
+-  billingCycle: 'monthly' | 'yearly' | 'weekly'
++  billing_cycle: 'monthly' | 'yearly'
++  
++  /** 下次計費日期 (YYYY-MM-DD 格式) */
++  next_billing_date: string
+   
+   /** 訂閱狀態 */
+-  status: 'active' | 'cancelled' | 'expired'
++  status: 'active' | 'paused' | 'cancelled'
+   
+-  /** 備註 (可選) */
+-  note?: string
++  /** 訂閱分類 */
++  category?: string
+   
+-  /** 提前幾天通知 (可選，預設為 3 天) */
+-  notifyBeforeDays?: number
++  /** 網站連結 */
++  website?: string
+   
+   /** 建立時間 */
+-  createdAt: string
++  created_at: string
+   
+   /** 最後更新時間 */
+-  updatedAt: string
++  updated_at: string
+ }
+ 
+ export interface CreateSubscriptionRequest {
+   name: string
+-  renewAt: string
++  description?: string
+   price: number
+   currency: string
+-  billingCycle: 'monthly' | 'yearly' | 'weekly'
+-  note?: string
+-  notifyBeforeDays?: number
++  billing_cycle?: 'monthly' | 'yearly'
++  billingCycle?: 'monthly' | 'yearly' | 'weekly'
++  next_billing_date?: string
++  nextBilling?: string
++  next_billing?: string
++  renewalDate?: string
++  renewal_date?: string
++  status?: 'active' | 'paused' | 'cancelled'
++  category?: string
++  website?: string
+ }
+ 
+ export interface UpdateSubscriptionRequest extends Partial<CreateSubscriptionRequest> {
+-  status?: 'active' | 'cancelled' | 'expired'
++  // 繼承所有 CreateSubscriptionRequest 的字段，都是可選的
+ }
+ 
+ export interface ApiResponse<T = any> {
+Index: node_modules/subs-backend/wrangler.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>name = \"subs-backend\"\r\nmain = \"src/index.ts\"\r\ncompatibility_date = \"2024-01-01\"\r\n\r\n[dev]\r\nport = 8977\r\n\r\n[[kv_namespaces]]\r\nbinding = \"SUBSCRIPTIONS_KV\"\r\nid = \"0fe3512cddea4efda30957c36ce9e6d5\"  #生產環境 ID\r\npreview_id = \"d64436260dad4d55929e7f2e638c5c4f\"  # 預覽環境 ID
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/subs-backend/wrangler.toml b/node_modules/subs-backend/wrangler.toml
+--- a/node_modules/subs-backend/wrangler.toml	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/subs-backend/wrangler.toml	(date 1760790422164)
+@@ -1,11 +1,23 @@
+ name = "subs-backend"
+ main = "src/index.ts"
+-compatibility_date = "2024-01-01"
++compatibility_date = "2025-09-01"
+ 
+-[dev]
+-port = 8977
++[vars]
++DEFAULT_CURRENCY = "TWD"
++ALLOWED_ORIGINS = "http://localhost:3000"
++
++[[d1_databases]]
++binding = "DB"
++database_name = "subs-db"
++database_id = "1ad2aab3-de65-43fc-85df-1f8c63432d8f"
+ 
+ [[kv_namespaces]]
+ binding = "SUBSCRIPTIONS_KV"
+ id = "0fe3512cddea4efda30957c36ce9e6d5"  #生產環境 ID
+-preview_id = "d64436260dad4d55929e7f2e638c5c4f"  # 預覽環境 ID
+\ No newline at end of file
++preview_id = "d64436260dad4d55929e7f2e638c5c4f"  # 預覽環境 ID
++
++[dev]
++port = 8787
++
++[triggers]
++crons = ["0 0 * * *"]
+\ No newline at end of file
+Index: node_modules/substracker-frontend/src/pages/Subscriptions.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><template>\r\n  <div class=\"px-4 sm:px-0\">\r\n    <!-- 頁面標題和操作 -->\r\n    <div class=\"sm:flex sm:items-center sm:justify-between mb-6\">\r\n      <div class=\"sm:flex-auto\">\r\n        <h1 class=\"text-2xl font-semibold text-gray-900\">訂閱管理</h1>\r\n        <p class=\"mt-2 text-sm text-gray-700\">管理您的所有訂閱服務</p>\r\n      </div>\r\n      <div class=\"mt-4 sm:mt-0 sm:ml-16 sm:flex-none\">\r\n        <button\r\n          @click=\"handleAddClick\"\r\n          class=\"btn-primary\"\r\n        >\r\n          新增訂閱\r\n        </button>\r\n      </div>\r\n    </div>\r\n\r\n    <!-- 統計 -->\r\n    <div class=\"grid grid-cols-1 md:grid-cols-3 gap-6 mb-8\">\r\n      <div class=\"bg-white overflow-hidden shadow rounded-lg p-5\">\r\n        <div class=\"flex items-center\">\r\n          <div class=\"flex-shrink-0\">\r\n            <div class=\"w-8 h-8 bg-green-100 rounded-full flex items-center justify-center\">\r\n              <svg class=\"w-5 h-5 text-green-600\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\r\n                <path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\" clip-rule=\"evenodd\" />\r\n              </svg>\r\n            </div>\r\n          </div>\r\n          <div class=\"ml-5 w-0 flex-1\">\r\n            <dl>\r\n              <dt class=\"text-sm font-medium text-gray-500 truncate\">活躍訂閱</dt>\r\n              <dd class=\"text-lg font-medium text-gray-900\">{{ activeCount }}</dd>\r\n            </dl>\r\n          </div>\r\n        </div>\r\n      </div>\r\n\r\n      <div class=\"bg-white overflow-hidden shadow rounded-lg p-5\">\r\n        <div class=\"flex items-center\">\r\n          <div class=\"flex-shrink-0\">\r\n            <div class=\"w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center\">\r\n              <svg class=\"w-5 h-5 text-blue-600\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\r\n                <path d=\"M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z\" />\r\n                <path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z\" clip-rule=\"evenodd\" />\r\n              </svg>\r\n            </div>\r\n          </div>\r\n          <div class=\"ml-5 w-0 flex-1\">\r\n            <dl>\r\n              <dt class=\"text-sm font-medium text-gray-500 truncate\">月支出</dt>\r\n              <dd class=\"text-lg font-medium text-gray-900\">{{ formatPrice(monthlySpend) }}</dd>\r\n            </dl>\r\n          </div>\r\n        </div>\r\n      </div>\r\n\r\n      <div class=\"bg-white overflow-hidden shadow rounded-lg p-5\">\r\n        <div class=\"flex items-center\">\r\n          <div class=\"flex-shrink-0\">\r\n            <div class=\"w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center\">\r\n              <svg class=\"w-5 h-5 text-purple-600\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\r\n                <path d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\" />\r\n              </svg>\r\n            </div>\r\n          </div>\r\n          <div class=\"ml-5 w-0 flex-1\">\r\n            <dl>\r\n              <dt class=\"text-sm font-medium text-gray-500 truncate\">總訂閱</dt>\r\n              <dd class=\"text-lg font-medium text-gray-900\">{{ totalCount }}</dd>\r\n            </dl>\r\n          </div>\r\n        </div>\r\n      </div>\r\n    </div>\r\n\r\n    <!-- 訂閱列表 -->\r\n    <div class=\"bg-white shadow rounded-lg p-6\">\r\n      <h3 class=\"text-lg font-medium text-gray-900 mb-4\">訂閱列表</h3>\r\n      <div v-if=\"subscriptions.length === 0\" class=\"text-center py-8\">\r\n        <p class=\"text-gray-500\">目前沒有訂閱服務</p>\r\n        <button @click=\"handleAddClick\" class=\"mt-4 btn-primary\">\r\n          新增第一個訂閱\r\n        </button>\r\n      </div>\r\n      <div v-else class=\"space-y-4\">\r\n        <div v-for=\"subscription in subscriptions\" :key=\"subscription.id\" \r\n             class=\"border border-gray-200 rounded-lg p-4\">\r\n          <div class=\"flex justify-between items-start\">\r\n            <div>\r\n              <h4 class=\"font-medium text-gray-900\">{{ subscription.name }}</h4>\r\n              <p class=\"text-sm text-gray-500\">{{ subscription.category }}</p>\r\n              <p class=\"text-sm text-gray-600\">{{ formatPrice(subscription.price) }} / {{ subscription.billingCycle === 'monthly' ? '月' : '年' }}</p>\r\n            </div>\r\n            <div class=\"flex space-x-2\">\r\n              <button @click=\"handleEdit(subscription)\" class=\"text-blue-600 hover:text-blue-800\">編輯</button>\r\n              <button @click=\"handleDelete(subscription.id)\" class=\"text-red-600 hover:text-red-800\">刪除</button>\r\n            </div>\r\n          </div>\r\n        </div>\r\n      </div>\r\n    </div>\r\n\r\n\r\n  \r\n  <!-- 訂閱模態框 -->\r\n  <Teleport to=\"body\">\r\n    <div v-if=\"pageStore.subscriptions.showAddForm\" class=\"modal-overlay\" @click.self=\"pageStore.closeModal\">\r\n      <div class=\"modal-container\">\r\n        <div class=\"p-6\">\r\n          <div class=\"flex justify-between items-center mb-4\">\r\n            <h2 class=\"text-xl font-semibold text-gray-900\">新增訂閱</h2>\r\n            <button @click=\"pageStore.closeModal\" class=\"text-gray-400 hover:text-gray-500\">\r\n              <svg class=\"h-6 w-6\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\r\n                <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\" />\r\n              </svg>\r\n            </button>\r\n          </div>\r\n          <SubscriptionForm \r\n            :loading=\"false\" \r\n            @submit=\"handleAddSubmit\" \r\n            @cancel=\"pageStore.closeModal\" \r\n          />\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </Teleport>\r\n  </div>\r\n</template>\r\n\r\n\r\n\r\n<script setup lang=\"ts\">\r\nimport { ref, computed, onMounted } from 'vue'\r\nimport { usePageStore } from '@/stores'\r\nimport SubscriptionForm from '@/components/SubscriptionForm.vue'\r\n\r\n// 定義組件名稱，用於 keep-alive\r\ndefineOptions({\r\n  name: 'Subscriptions'\r\n})\r\n\r\n// 引入 pageStore\r\nconst pageStore = usePageStore()\r\n\r\n// 訂閱類型定義\r\n// 在 Subscription 介面定義後新增 FormData 介面\r\ninterface Subscription {\r\n  id: number\r\n  name: string\r\n  category: string\r\n  price: number\r\n  billingCycle: 'monthly' | 'yearly'\r\n  status: 'active' | 'paused' | 'cancelled'\r\n}\r\n\r\n// 新增 FormData 介面\r\ninterface FormData {\r\n  name: string\r\n  category: string\r\n  price: number\r\n  billingCycle: 'monthly' | 'yearly'\r\n  status?: 'active' | 'paused' | 'cancelled'\r\n}\r\n\r\n// 訂閱資料狀態\r\nconst subscriptions = ref<Subscription[]>([])\r\n\r\n// 統計數據\r\nconst activeCount = computed(() => {\r\n  return subscriptions.value.filter(sub => sub.status === 'active').length\r\n})\r\n\r\nconst totalCount = computed(() => {\r\n  return subscriptions.value.length\r\n})\r\n\r\nconst monthlySpend = computed(() => {\r\n  return subscriptions.value\r\n    .filter(sub => sub.status === 'active')\r\n    .reduce((total, sub) => {\r\n      const monthlyPrice = sub.billingCycle === 'yearly' ? sub.price / 12 : sub.price\r\n      return total + monthlyPrice\r\n    }, 0)\r\n})\r\n\r\n// 事件處理\r\nfunction handleAddClick() {\r\n  pageStore.setShowAddForm(true)\r\n}\r\n\r\n// 使用 FormData 介面作為參數類型\r\nfunction handleAddSubmit(formData: FormData) {\r\n  console.log('新增新訂閱:', formData)\r\n\r\n  const newSubscription = {\r\n    ...formData,\r\n    id: Date.now(),\r\n    status: formData.status || 'active'\r\n  }\r\n\r\n  subscriptions.value.push(newSubscription)\r\n\r\n  // 關閉模態框\r\n  pageStore.closeModal()\r\n}\r\n\r\n\r\nfunction handleEdit(subscription: Subscription) {\r\n  // TODO: 實作編輯訂閱功能\r\n  console.log('編輯訂閱:', subscription.name)\r\n}\r\n\r\nfunction handleDelete(id: number) {\r\n  if (confirm('確定要刪除這個訂閱嗎？')) {\r\n    subscriptions.value = subscriptions.value.filter(sub => sub.id !== id)\r\n  }\r\n}\r\n\r\nfunction formatPrice(price: number): string {\r\n  return new Intl.NumberFormat('zh-TW', {\r\n    style: 'currency',\r\n    currency: 'TWD',\r\n    minimumFractionDigits: 0\r\n  }).format(price)\r\n}\r\n\r\n// 初始化\r\nonMounted(() => {\r\n  // TODO: 載入訂閱數據\r\n  console.log('訂閱管理頁面已載入')\r\n})\r\n</script>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/pages/Subscriptions.vue b/node_modules/substracker-frontend/src/pages/Subscriptions.vue
+--- a/node_modules/substracker-frontend/src/pages/Subscriptions.vue	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/pages/Subscriptions.vue	(date 1760790422166)
+@@ -83,48 +83,63 @@
+           新增第一個訂閱
+         </button>
+       </div>
+-      <div v-else class="space-y-4">
+-        <div v-for="subscription in subscriptions" :key="subscription.id" 
+-             class="border border-gray-200 rounded-lg p-4">
+-          <div class="flex justify-between items-start">
+-            <div>
+-              <h4 class="font-medium text-gray-900">{{ subscription.name }}</h4>
+-              <p class="text-sm text-gray-500">{{ subscription.category }}</p>
+-              <p class="text-sm text-gray-600">{{ formatPrice(subscription.price) }} / {{ subscription.billingCycle === 'monthly' ? '月' : '年' }}</p>
+-            </div>
+-            <div class="flex space-x-2">
+-              <button @click="handleEdit(subscription)" class="text-blue-600 hover:text-blue-800">編輯</button>
+-              <button @click="handleDelete(subscription.id)" class="text-red-600 hover:text-red-800">刪除</button>
+-            </div>
+-          </div>
+-        </div>
++      <div v-else>
++        <SubscriptionList
++          :subscriptions="subscriptions"
++          @edit="handleEdit"
++          @delete="handleDelete"
++          @status-change="handleStatusChange"
++        />
+       </div>
+     </div>
+ 
+ 
+   
+   <!-- 訂閱模態框 -->
+-  <Teleport to="body">
+-    <div v-if="pageStore.subscriptions.showAddForm" class="modal-overlay" @click.self="pageStore.closeModal">
+-      <div class="modal-container">
+-        <div class="p-6">
+-          <div class="flex justify-between items-center mb-4">
+-            <h2 class="text-xl font-semibold text-gray-900">新增訂閱</h2>
+-            <button @click="pageStore.closeModal" class="text-gray-400 hover:text-gray-500">
+-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+-              </svg>
+-            </button>
+-          </div>
+-          <SubscriptionForm 
+-            :loading="false" 
+-            @submit="handleAddSubmit" 
+-            @cancel="pageStore.closeModal" 
+-          />
++    <Teleport to="body">
++      <!-- 新增模態框 -->
++      <div v-if="pageStore.subscriptions.showAddForm" class="modal-overlay" @click.self="pageStore.closeModal">
++        <div class="modal-container">
++          <div class="p-6">
++            <div class="flex justify-between items-center mb-4">
++              <h2 class="text-xl font-semibold text-gray-900">新增訂閱</h2>
++              <button @click="pageStore.closeModal" class="text-gray-400 hover:text-gray-500">
++                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
++                </svg>
++              </button>
++            </div>
++            <SubscriptionForm 
++              :loading="false" 
++              @submit="handleAddSubmit" 
++              @cancel="pageStore.closeModal" 
++            />
++          </div>
+         </div>
+       </div>
+-    </div>
+-  </Teleport>
++
++      <!-- 編輯模態框 -->
++      <div v-if="pageStore.subscriptions.showEditForm && pageStore.subscriptions.editingSubscription" class="modal-overlay" @click.self="pageStore.closeModal">
++        <div class="modal-container">
++          <div class="p-6">
++            <div class="flex justify-between items-center mb-4">
++              <h2 class="text-xl font-semibold text-gray-900">編輯訂閱</h2>
++              <button @click="pageStore.closeModal" class="text-gray-400 hover:text-gray-500">
++                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
++                </svg>
++              </button>
++            </div>
++            <SubscriptionForm 
++              :subscription="pageStore.subscriptions.editingSubscription"
++              :loading="false"
++              @submit="handleEditSubmit"
++              @cancel="pageStore.closeModal"
++            />
++          </div>
++        </div>
++      </div>
++    </Teleport>
+   </div>
+ </template>
+ 
+@@ -132,10 +147,11 @@
+ 
+ <script setup lang="ts">
+ import { ref, computed, onMounted } from 'vue'
+-import { usePageStore } from '@/stores'
++import { usePageStore, useSubscriptionStore } from '@/stores'
++import type { Subscription } from '@/stores'
+ import SubscriptionForm from '@/components/SubscriptionForm.vue'
++import SubscriptionList from '@/components/SubscriptionList.vue'
+ 
+-// 定義組件名稱，用於 keep-alive
+ defineOptions({
+   name: 'Subscriptions'
+ })
+@@ -143,29 +159,15 @@
+ // 引入 pageStore
+ const pageStore = usePageStore()
+ 
+-// 訂閱類型定義
+-// 在 Subscription 介面定義後新增 FormData 介面
+-interface Subscription {
+-  id: number
+-  name: string
+-  category: string
+-  price: number
+-  billingCycle: 'monthly' | 'yearly'
+-  status: 'active' | 'paused' | 'cancelled'
+-}
+-
+-// 新增 FormData 介面
+-interface FormData {
+-  name: string
+-  category: string
+-  price: number
+-  billingCycle: 'monthly' | 'yearly'
+-  status?: 'active' | 'paused' | 'cancelled'
+-}
++// 新增/編輯表單資料型別（沿用 stores 的 Subscription 型別）
++type FormData = Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>
+ 
+ // 訂閱資料狀態
+ const subscriptions = ref<Subscription[]>([])
+ 
++// subscription store
++const subscriptionStore = useSubscriptionStore()
++
+ // 統計數據
+ const activeCount = computed(() => {
+   return subscriptions.value.filter(sub => sub.status === 'active').length
+@@ -189,31 +191,57 @@
+   pageStore.setShowAddForm(true)
+ }
+ 
+-// 使用 FormData 介面作為參數類型
+-function handleAddSubmit(formData: FormData) {
+-  console.log('新增新訂閱:', formData)
+-
+-  const newSubscription = {
+-    ...formData,
+-    id: Date.now(),
+-    status: formData.status || 'active'
+-  }
+-
+-  subscriptions.value.push(newSubscription)
+-
+-  // 關閉模態框
+-  pageStore.closeModal()
++// 使用 FormData 型別作為參數類型
++async function handleAddSubmit(formData: FormData) {
++  try {
++    const created = await subscriptionStore.addSubscription(formData)
++    // 同步頁面本地陣列（可直接覆蓋為 store 的狀態，避免重複）
++    const exists = subscriptions.value.find(s => s.id === created.id)
++    if (!exists) {
++      subscriptions.value.push(created)
++    }
++    pageStore.closeModal()
++  } catch (err) {
++    console.error('新增訂閱失敗:', err)
++    // 顯示用戶友好的錯誤訊息
++    const errorMessage = err instanceof Error ? err.message : '新增訂閱失敗，請檢查輸入的資料'
++    alert(`錯誤：${errorMessage}`)
++  }
+ }
+ 
+ 
+ function handleEdit(subscription: Subscription) {
+-  // TODO: 實作編輯訂閱功能
+-  console.log('編輯訂閱:', subscription.name)
++  // 開啟編輯 modal 並設定要編輯的資料
++  console.log('handleEdit invoked for', subscription)
++  pageStore.setEditingSubscription(subscription)
++  pageStore.setShowEditForm(true)
+ }
+ 
+-function handleDelete(id: number) {
+-  if (confirm('確定要刪除這個訂閱嗎？')) {
++async function handleDelete(id: number) {
++  if (!confirm('確定要刪除這個訂閱嗎？')) return
++  try {
++    await subscriptionStore.removeSubscription(id)
+     subscriptions.value = subscriptions.value.filter(sub => sub.id !== id)
++  } catch (err) {
++    console.error('刪除訂閱失敗:', err)
++  }
++}
++
++// 狀態切換（由 SubscriptionCard 透過 SubscriptionList 冒泡）
++async function handleStatusChange(id: number, status: string) {
++  try {
++    const updated = await subscriptionStore.updateSubscriptionStatus(id, status)
++    const idx = subscriptions.value.findIndex(s => s.id === id)
++    if (idx !== -1) {
++      subscriptions.value[idx] = { ...subscriptions.value[idx], ...updated }
++    }
++  } catch (err) {
++    console.error('更新狀態失敗:', err)
++    // fallback: 本地更新，避免操作無感
++    const idx = subscriptions.value.findIndex(s => s.id === id)
++    if (idx !== -1) {
++      subscriptions.value[idx] = { ...subscriptions.value[idx], status: status as any }
++    }
+   }
+ }
+ 
+@@ -225,9 +253,51 @@
+   }).format(price)
+ }
+ 
+-// 初始化
+-onMounted(() => {
+-  // TODO: 載入訂閱數據
+-  console.log('訂閱管理頁面已載入')
++// 編輯表單提交
++async function handleEditSubmit(formData: FormData) {
++  const editing = pageStore.subscriptions.editingSubscription
++  if (!editing) {
++    console.warn('handleEditSubmit: no editing subscription set')
++    return
++  }
++
++  console.log('handleEditSubmit called with', formData, 'editing id', editing.id)
++
++  try {
++    // 嘗試使用 subscription store 更新
++    const updated = await subscriptionStore.updateSubscription(editing.id, formData)
++
++    // 更新頁面本地陣列
++    const idx = subscriptions.value.findIndex(s => s.id === editing.id)
++    if (idx !== -1) {
++      subscriptions.value[idx] = { ...subscriptions.value[idx], ...updated }
++    }
++
++    pageStore.closeModal()
++  } catch (err) {
++    console.error('更新訂閱失敗 (store):', err)
++    // fallback: 直接在本地陣列做更新，避免使用者看不到變更
++    try {
++      const idx = subscriptions.value.findIndex(s => s.id === editing.id)
++      if (idx !== -1) {
++        subscriptions.value[idx] = { ...subscriptions.value[idx], ...formData }
++      }
++      pageStore.closeModal()
++    } catch (err2) {
++      console.error('更新訂閱失敗 (fallback):', err2)
++    }
++  }
++}
++
++// 初始化：從 subscription store 載入資料並同步
++onMounted(async () => {
++  console.log('訂閱管理頁面已載入 - fetching subscriptions')
++  try {
++    await subscriptionStore.fetchSubscriptions()
++    // 將 store 的資料同步到本地狀態
++    subscriptions.value = subscriptionStore.subscriptions
++  } catch (err) {
++    console.error('載入訂閱失敗:', err)
++  }
+ })
+ </script>
+\ No newline at end of file
+Index: node_modules/substracker-frontend/src/stores/index.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import api from '@/api';\r\nimport { defineStore } from 'pinia';\r\nimport { ref, computed } from 'vue';\r\n\r\n// 簡化的訂閱介面定義\r\nexport interface Subscription {\r\n  id: number\r\n  name: string\r\n  description?: string\r\n  price: number\r\n  currency: string\r\n  billingCycle: 'monthly' | 'yearly'\r\n  nextBilling: string\r\n  status: 'active' | 'paused' | 'cancelled'\r\n  category: string\r\n  website?: string\r\n  logo?: string  // 新增可選的 logo 屬性\r\n  createdAt: string\r\n  updatedAt: string\r\n}\r\n\r\n// 用戶狀態\r\nexport const useUserStore = defineStore('user', () => {\r\n  const user = ref<any>(null)\r\n  const isLoggedIn = computed(() => !!user.value)\r\n  \r\n  // 本地存儲鍵\r\n  const USER_STORAGE_KEY = 'user_data'\r\n  \r\n  function setUser(userData: any) {\r\n    user.value = userData\r\n    // 保存到 localStorage\r\n    try {\r\n      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData))\r\n    } catch (error) {\r\n      console.warn('無法保存用戶資料到本地存儲:', error)\r\n    }\r\n  }\r\n  \r\n  function logout() {\r\n    user.value = null\r\n    // 清除 localStorage\r\n    try {\r\n      localStorage.removeItem(USER_STORAGE_KEY)\r\n    } catch (error) {\r\n      console.warn('無法清除用戶資料:', error)\r\n    }\r\n  }\r\n  \r\n  // 從 localStorage 載入用戶資料\r\n  function loadUserFromStorage() {\r\n    try {\r\n      const stored = localStorage.getItem(USER_STORAGE_KEY)\r\n      if (stored) {\r\n        user.value = JSON.parse(stored)\r\n      }\r\n    } catch (error) {\r\n      console.warn('無法從本地存儲載入用戶資料:', error)\r\n    }\r\n  }\r\n  \r\n  // 初始化時載入用戶資料\r\n  loadUserFromStorage()\r\n  \r\n  return { user, isLoggedIn, setUser, logout, loadUserFromStorage }\r\n})\r\n\r\n// 頁面狀態管理\r\nexport const usePageStore = defineStore('page', () => {\r\n  // 設定頁面狀態\r\n  const settings = ref({\r\n    profile: {\r\n      name: 'admin'\r\n    },\r\n    notifications: {\r\n      billing: true,\r\n      monthly: true,\r\n      lunar: false\r\n    }\r\n  })\r\n\r\n  // 訂閱頁面狀態\r\n  const subscriptions = ref({\r\n    showAddForm: false,\r\n    showEditForm: false,\r\n    editingSubscription: null as any\r\n  })\r\n\r\n  // 設定頁面方法\r\n  function updateProfile(profileData: { name: string }) {\r\n    settings.value.profile = { ...settings.value.profile, ...profileData }\r\n  }\r\n\r\n  function updateNotifications(notificationData: { billing?: boolean; monthly?: boolean; lunar?: boolean }) {\r\n    settings.value.notifications = { ...settings.value.notifications, ...notificationData }\r\n  }\r\n\r\n  // 訂閱頁面方法\r\n  function setShowAddForm(show: boolean) {\r\n    subscriptions.value.showAddForm = show\r\n  }\r\n\r\n  function setShowEditForm(show: boolean) {\r\n    subscriptions.value.showEditForm = show\r\n  }\r\n\r\n  function setEditingSubscription(subscription: any) {\r\n    subscriptions.value.editingSubscription = subscription\r\n  }\r\n\r\n  function closeModal() {\r\n    subscriptions.value.showAddForm = false\r\n    subscriptions.value.showEditForm = false\r\n    subscriptions.value.editingSubscription = null\r\n  }\r\n\r\n  return {\r\n    settings,\r\n    subscriptions,\r\n    updateProfile,\r\n    updateNotifications,\r\n    setShowAddForm,\r\n    setShowEditForm,\r\n    setEditingSubscription,\r\n    closeModal\r\n  }\r\n})\r\n\r\n// 簡化的訂閱狀態管理\r\nexport const useSubscriptionStore = defineStore('subscription', () => {\r\n  // 基本狀態\r\n  const subscriptions = ref<Subscription[]>([])\r\n  const loading = ref(false)\r\n  \r\n  // 本地存儲鍵\r\n  const STORAGE_KEY = 'subscriptions_data'\r\n  \r\n  // 計算屬性\r\n  const activeSubscriptions = computed(() => \r\n    subscriptions.value.filter(sub => sub.status === 'active')\r\n  )\r\n  \r\n  // 數據持久化\r\n  function saveToLocalStorage() {\r\n    try {\r\n      localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions.value))\r\n    } catch (error) {\r\n      console.warn('無法保存到本地存儲:', error)\r\n    }\r\n  }\r\n  \r\n  function loadFromLocalStorage() {\r\n    try {\r\n      const stored = localStorage.getItem(STORAGE_KEY)\r\n      if (stored) {\r\n        subscriptions.value = JSON.parse(stored)\r\n      }\r\n    } catch (error) {\r\n      console.warn('無法從本地存儲加載:', error)\r\n    }\r\n  }\r\n  \r\n  // CRUD 操作\r\n  async function fetchSubscriptions() {\r\n    if (loading.value) return\r\n    \r\n    loading.value = true\r\n    \r\n    try {\r\n      // 先加載本地數據\r\n      if (subscriptions.value.length === 0) {\r\n        loadFromLocalStorage()\r\n      }\r\n      \r\n      const result = await api.getSubscriptions()\r\n      if (result.success && Array.isArray(result.data)) {\r\n        subscriptions.value = result.data\r\n      } else {\r\n        subscriptions.value = []\r\n      }\r\n      saveToLocalStorage()\r\n    } catch (err) {\r\n      console.error('獲取訂閱列表失敗:', err)\r\n      // 如果網絡失敗，嘗試加載本地數據\r\n      if (subscriptions.value.length === 0) {\r\n        loadFromLocalStorage()\r\n      }\r\n    } finally {\r\n      loading.value = false\r\n    }\r\n  }\r\n  \r\n  async function addSubscription(subscription: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>) {\r\n    loading.value = true\r\n    \r\n    try {\r\n      const newSubscription: Subscription = {\r\n        ...subscription,\r\n        id: Date.now(),\r\n        createdAt: new Date().toISOString(),\r\n        updatedAt: new Date().toISOString()\r\n      }\r\n      \r\n      // 本地新增\r\n      subscriptions.value.push(newSubscription)\r\n      saveToLocalStorage()\r\n      \r\n      // API 調用\r\n      try {\r\n        const result = await api.createSubscription(newSubscription)\r\n        if (!result.success) {\r\n          console.warn('API 調用失敗，數據已保存到本地')\r\n        }\r\n      } catch (apiError) {\r\n        console.warn('API 調用失敗，數據已保存到本地:', apiError)\r\n      }\r\n      \r\n      return newSubscription\r\n    } catch (err) {\r\n      console.error('新增訂閱失敗:', err)\r\n      throw err\r\n    } finally {\r\n      loading.value = false\r\n    }\r\n  }\r\n  \r\n  async function updateSubscription(id: number, updates: Partial<Subscription>) {\r\n    loading.value = true\r\n    \r\n    try {\r\n      const index = subscriptions.value.findIndex(sub => sub.id === id)\r\n      if (index === -1) {\r\n        throw new Error('訂閱不存在')\r\n      }\r\n      \r\n      const updatedSubscription = {\r\n        ...subscriptions.value[index],\r\n        ...updates,\r\n        updatedAt: new Date().toISOString()\r\n      }\r\n      \r\n      // 本地更新\r\n      subscriptions.value[index] = updatedSubscription\r\n      saveToLocalStorage()\r\n      \r\n      // API 調用\r\n      try {\r\n        const result = await api.updateSubscription(id.toString(), updatedSubscription)\r\n        if (!result.success) {\r\n          console.warn('API 調用失敗，數據已保存到本地')\r\n        }\r\n      } catch (apiError) {\r\n        console.warn('API 調用失敗，數據已保存到本地:', apiError)\r\n      }\r\n      \r\n      return updatedSubscription\r\n    } catch (err) {\r\n      console.error('更新訂閱失敗:', err)\r\n      throw err\r\n    } finally {\r\n      loading.value = false\r\n    }\r\n  }\r\n  \r\n  async function removeSubscription(id: number) {\r\n    loading.value = true\r\n    \r\n    try {\r\n      const index = subscriptions.value.findIndex(sub => sub.id === id)\r\n      if (index === -1) {\r\n        throw new Error('訂閱不存在')\r\n      }\r\n      \r\n      // 本地刪除\r\n      subscriptions.value.splice(index, 1)\r\n      saveToLocalStorage()\r\n      \r\n      // API 調用\r\n      try {\r\n        const result = await api.deleteSubscription(id.toString())\r\n        if (!result.success) {\r\n          console.warn('API 調用失敗，數據已保存到本地')\r\n        }\r\n      } catch (apiError) {\r\n        console.warn('API 調用失敗，數據已保存到本地:', apiError)\r\n      }\r\n      \r\n      return true\r\n    } catch (err) {\r\n      console.error('刪除訂閱失敗:', err)\r\n      throw err\r\n    } finally {\r\n      loading.value = false\r\n    }\r\n  }\r\n  \r\n  // 初始化時加載本地數據\r\n  loadFromLocalStorage()\r\n  \r\n  return {\r\n    // 狀態\r\n    subscriptions,\r\n    loading,\r\n    activeSubscriptions,\r\n    \r\n    // CRUD 方法\r\n    fetchSubscriptions,\r\n    addSubscription,\r\n    updateSubscription,\r\n    removeSubscription,\r\n    deleteSubscription: removeSubscription,\r\n    updateSubscriptionStatus: (id: number, status: string) => updateSubscription(id, { status: status as Subscription['status'] })\r\n  }\r\n})
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/substracker-frontend/src/stores/index.ts b/node_modules/substracker-frontend/src/stores/index.ts
+--- a/node_modules/substracker-frontend/src/stores/index.ts	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/substracker-frontend/src/stores/index.ts	(date 1760790422168)
+@@ -2,6 +2,31 @@
+ import { defineStore } from 'pinia';
+ import { ref, computed } from 'vue';
+ 
++// 日期驗證工具函數
++function isValidDate(dateString: string): boolean {
++  try {
++    const date = new Date(dateString)
++    return !Number.isNaN(date.getTime()) && 
++           date.getFullYear() > 1900 && 
++           date.getFullYear() < 2100
++  } catch {
++    return false
++  }
++}
++
++// 日期格式化工具函數
++function formatDateForBackend(dateString: string): string | undefined {
++  if (!isValidDate(dateString)) {
++    return undefined
++  }
++  try {
++    const date = new Date(dateString)
++    return date.toISOString().split('T')[0] // 轉換為 YYYY-MM-DD 格式
++  } catch {
++    return undefined
++  }
++}
++
+ // 簡化的訂閱介面定義
+ export interface Subscription {
+   id: number
+@@ -9,7 +34,7 @@
+   description?: string
+   price: number
+   currency: string
+-  billingCycle: 'monthly' | 'yearly'
++  billingCycle: 'monthly' | 'yearly' | 'weekly'
+   nextBilling: string
+   status: 'active' | 'paused' | 'cancelled'
+   category: string
+@@ -173,8 +198,24 @@
+       }
+       
+       const result = await api.getSubscriptions()
+-      if (result.success && Array.isArray(result.data)) {
+-        subscriptions.value = result.data
++      if (result.success && result.data && Array.isArray(result.data.data)) {
++        // 轉換後端數據格式為前端格式，添加防護性檢查
++        subscriptions.value = result.data.data
++          .filter((backendItem: any) => backendItem.id && backendItem.id > 0) // 過濾掉無效 ID
++          .map((backendItem: any) => ({
++            id: backendItem.id,
++            name: backendItem.name || '未命名服務',
++            description: backendItem.description || '',
++            price: backendItem.price || 0,
++            currency: backendItem.currency || 'TWD',
++            billingCycle: backendItem.billing_cycle || 'monthly',
++            nextBilling: backendItem.next_billing_date || new Date().toISOString().split('T')[0],
++            status: backendItem.status || 'active',
++            category: backendItem.category || '',
++            website: backendItem.website || '',
++            createdAt: backendItem.created_at || new Date().toISOString(),
++            updatedAt: backendItem.updated_at || new Date().toISOString()
++          }))
+       } else {
+         subscriptions.value = []
+       }
+@@ -194,27 +235,76 @@
+     loading.value = true
+     
+     try {
++      // 整理 payload：移除空字串欄位並確保基本型別
++      const payload: any = { ...subscription }
++      if (typeof payload.price !== 'number') payload.price = Number(payload.price)
++      if (payload.description === '') delete payload.description
++      if (payload.website === '') delete payload.website
++      if (!payload.logo) delete payload.logo
++      // 標準化日期（若非 ISO，轉為 ISO）
++      if (isValidDate(payload.nextBilling)) {
++        const d = new Date(payload.nextBilling)
++        payload.nextBilling = d.toISOString()
++      } else {
++        console.warn('無效的日期格式:', payload.nextBilling)
++      }
++
++      // 先調用 API 創建訂閱，獲取後端返回的真實 ID
++      const backendPayload = {
++        name: payload.name,
++        description: payload.description || '', // 可選，有默認值
++        price: Number(payload.price), // 必須是非負數
++        currency: payload.currency || 'TWD', // 必須是 ['TWD','USD','JPY','EUR'] 之一
++        billing_cycle: payload.billingCycle === 'weekly' ? 'monthly' : payload.billingCycle, // 後端不支援 weekly，轉為 monthly
++        // 使用後端期望的日期字段名稱，確保格式正確
++        next_billing_date: formatDateForBackend(payload.nextBilling),
++        status: payload.status || 'active', // 必須是 ['active','paused','cancelled'] 之一
++        category: payload.category || '', // 可選，有默認值
++        website: payload.website && payload.website.trim() !== '' ? payload.website : undefined // 只有當有值時才發送，避免空字串 URL 驗證錯誤
++      }
++      
++      // 檢查日期是否有效
++      if (!backendPayload.next_billing_date) {
++        throw new Error('請輸入有效的日期格式（YYYY-MM-DD）')
++      }
++      
++      console.log('發送到後端的數據:', JSON.stringify(backendPayload, null, 2))
++      const result = await api.createSubscription(backendPayload)
++      
++      if (!result.success) {
++        throw new Error(result.error || '創建訂閱失敗')
++      }
++      
++      // 使用後端返回的數據創建本地訂閱對象，添加防護性檢查
++      const backendData = result.data.data // result.data 是整個響應，result.data.data 是實際的訂閱數據
++      
++      console.log('Backend response data:', result.data)
++      console.log('Backend subscription data:', backendData)
++      
++      // 驗證後端返回的 ID
++      if (!backendData || !backendData.id || backendData.id <= 0) {
++        throw new Error('後端返回無效的訂閱 ID')
++      }
++      
+       const newSubscription: Subscription = {
+-        ...subscription,
+-        id: Date.now(),
+-        createdAt: new Date().toISOString(),
+-        updatedAt: new Date().toISOString()
++        id: backendData.id,
++        name: backendData.name || '未命名服務',
++        description: backendData.description || '',
++        price: backendData.price || 0,
++        currency: backendData.currency || 'TWD',
++        billingCycle: backendData.billing_cycle || 'monthly',
++        nextBilling: backendData.next_billing_date || new Date().toISOString().split('T')[0],
++        status: backendData.status || 'active',
++        category: backendData.category || '',
++        website: backendData.website || '',
++        createdAt: backendData.created_at || new Date().toISOString(),
++        updatedAt: backendData.updated_at || new Date().toISOString()
+       }
+       
+       // 本地新增
+       subscriptions.value.push(newSubscription)
+       saveToLocalStorage()
+       
+-      // API 調用
+-      try {
+-        const result = await api.createSubscription(newSubscription)
+-        if (!result.success) {
+-          console.warn('API 調用失敗，數據已保存到本地')
+-        }
+-      } catch (apiError) {
+-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
+-      }
+-      
+       return newSubscription
+     } catch (err) {
+       console.error('新增訂閱失敗:', err)
+@@ -233,26 +323,64 @@
+         throw new Error('訂閱不存在')
+       }
+       
+-      const updatedSubscription = {
+-        ...subscriptions.value[index],
+-        ...updates,
+-        updatedAt: new Date().toISOString()
++      const currentSubscription = subscriptions.value[index]
++      const updatedData = {
++        ...currentSubscription,
++        ...updates
++      }
++      
++      // 準備後端 payload
++      const backendPayload = {
++        name: updatedData.name,
++        description: updatedData.description || '',
++        price: Number(updatedData.price),
++        currency: updatedData.currency || 'TWD',
++        billing_cycle: updatedData.billingCycle === 'weekly' ? 'monthly' : updatedData.billingCycle,
++          next_billing_date: formatDateForBackend(updatedData.nextBilling),
++        status: updatedData.status || 'active',
++        category: updatedData.category || '',
++        website: updatedData.website && updatedData.website.trim() !== '' ? updatedData.website : undefined
++      }
++      
++      // 檢查日期是否有效（如果提供了日期）
++      if (backendPayload.next_billing_date === undefined && updatedData.nextBilling) {
++        throw new Error('請輸入有效的日期格式（YYYY-MM-DD）')
++      }
++      
++      // 先調用 API 更新
++      const result = await api.updateSubscription(id.toString(), backendPayload)
++      
++      if (!result.success) {
++        throw new Error(result.error || '更新訂閱失敗')
++      }
++      
++      // 使用後端返回的數據更新本地訂閱，添加防護性檢查
++      const backendData = result.data.data // result.data 是整個響應，result.data.data 是實際的訂閱數據
++      
++      // 驗證後端返回的 ID
++      if (!backendData || !backendData.id || backendData.id <= 0) {
++        throw new Error('後端返回無效的訂閱 ID')
++      }
++      
++      const updatedSubscription: Subscription = {
++        id: backendData.id,
++        name: backendData.name || '未命名服務',
++        description: backendData.description || '',
++        price: backendData.price || 0,
++        currency: backendData.currency || 'TWD',
++        billingCycle: backendData.billing_cycle || 'monthly',
++        nextBilling: backendData.next_billing_date || new Date().toISOString().split('T')[0],
++        status: backendData.status || 'active',
++        category: backendData.category || '',
++        website: backendData.website || '',
++        createdAt: backendData.created_at || new Date().toISOString(),
++        updatedAt: backendData.updated_at || new Date().toISOString()
+       }
+       
+       // 本地更新
+       subscriptions.value[index] = updatedSubscription
+       saveToLocalStorage()
+       
+-      // API 調用
+-      try {
+-        const result = await api.updateSubscription(id.toString(), updatedSubscription)
+-        if (!result.success) {
+-          console.warn('API 調用失敗，數據已保存到本地')
+-        }
+-      } catch (apiError) {
+-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
+-      }
+-      
+       return updatedSubscription
+     } catch (err) {
+       console.error('更新訂閱失敗:', err)
+@@ -271,20 +399,17 @@
+         throw new Error('訂閱不存在')
+       }
+       
++      // 先調用 API 刪除
++      const result = await api.deleteSubscription(id.toString())
++      
++      if (!result.success) {
++        throw new Error(result.error || '刪除訂閱失敗')
++      }
++      
+       // 本地刪除
+       subscriptions.value.splice(index, 1)
+       saveToLocalStorage()
+       
+-      // API 調用
+-      try {
+-        const result = await api.deleteSubscription(id.toString())
+-        if (!result.success) {
+-          console.warn('API 調用失敗，數據已保存到本地')
+-        }
+-      } catch (apiError) {
+-        console.warn('API 調用失敗，數據已保存到本地:', apiError)
+-      }
+-      
+       return true
+     } catch (err) {
+       console.error('刪除訂閱失敗:', err)
+Index: node_modules/subs-backend/src/index.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { Hono } from 'hono'\r\nimport { cors } from 'hono/cors'\r\nimport type { Subscription, CreateSubscriptionRequest, UpdateSubscriptionRequest, ApiResponse } from './types'\r\n\r\n// 導入 Cloudflare Workers 類型\r\n/// <reference types=\"@cloudflare/workers-types\" />\r\n\r\ntype Bindings = {\r\n  SUBSCRIPTIONS_KV: KVNamespace\r\n}\r\n\r\nconst app = new Hono<{ Bindings: Bindings }>()\r\n\r\n// CORS 設定\r\napp.use('*', cors({\r\n  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://ru-web.idv.tw/'],\r\n  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],\r\n  allowHeaders: ['Content-Type', 'Authorization'],\r\n}))\r\n\r\n// 錯誤處理中間件\r\napp.onError((err, c) => {\r\n  console.error('API Error:', err)\r\n  return c.json({\r\n    success: false,\r\n    error: err.message || 'Internal Server Error',\r\n    message: '服務器內部錯誤'\r\n  } as ApiResponse, 500)\r\n})\r\n\r\n// 數據驗證函數\r\nfunction validateSubscription(data: any): string[] {\r\n  const errors: string[] = []\r\n  \r\n  if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {\r\n    errors.push('訂閱名稱是必填項')\r\n  }\r\n  \r\n  if (!data.renewAt || typeof data.renewAt !== 'string') {\r\n    errors.push('續約日期是必填項')\r\n  } else {\r\n    const renewDate = new Date(data.renewAt)\r\n    if (isNaN(renewDate.getTime())) {\r\n      errors.push('續約日期格式無效')\r\n    }\r\n  }\r\n  \r\n  if (data.price === undefined || data.price === null || typeof data.price !== 'number' || data.price < 0) {\r\n    errors.push('價格必須是非負數')\r\n  }\r\n  \r\n  if (!data.currency || typeof data.currency !== 'string') {\r\n    errors.push('貨幣代碼是必填項')\r\n  }\r\n  \r\n  if (!data.billingCycle || !['monthly', 'yearly', 'weekly'].includes(data.billingCycle)) {\r\n    errors.push('計費週期必須是 monthly、yearly 或 weekly')\r\n  }\r\n  \r\n  return errors\r\n}\r\n\r\n// 生成唯一 ID\r\nfunction generateId(): string {\r\n  return Date.now().toString(36) + Math.random().toString(36).substr(2)\r\n}\r\n\r\n// KV 存儲服務類\r\nclass SubscriptionService {\r\n  private kv: KVNamespace\r\n\r\n  constructor(kv: KVNamespace) {\r\n    this.kv = kv\r\n  }\r\n\r\n  async getAll(): Promise<Subscription[]> {\r\n    try {\r\n      const list = await this.kv.list({ prefix: 'subscription:' })\r\n      const subscriptions: Subscription[] = []\r\n      \r\n      for (const key of list.keys) {\r\n        const value = await this.kv.get(key.name)\r\n        if (value) {\r\n          subscriptions.push(JSON.parse(value))\r\n        }\r\n      }\r\n      \r\n      return subscriptions\r\n    } catch (error) {\r\n      console.error('獲取訂閱列表失敗:', error)\r\n      throw new Error('獲取訂閱列表失敗')\r\n    }\r\n  }\r\n\r\n  async getById(id: string): Promise<Subscription | null> {\r\n    try {\r\n      const value = await this.kv.get(`subscription:${id}`)\r\n      return value ? JSON.parse(value) : null\r\n    } catch (error) {\r\n      console.error('獲取訂閱失敗:', error)\r\n      throw new Error('獲取訂閱失敗')\r\n    }\r\n  }\r\n\r\n  async create(data: CreateSubscriptionRequest): Promise<Subscription> {\r\n    try {\r\n      const id = crypto.randomUUID()\r\n      const now = new Date().toISOString()\r\n      \r\n      const subscription: Subscription = {\r\n        id,\r\n        ...data,\r\n        createdAt: now,\r\n        updatedAt: now,\r\n        status: 'active'\r\n      }\r\n      \r\n      await this.kv.put(`subscription:${id}`, JSON.stringify(subscription))\r\n      return subscription\r\n    } catch (error) {\r\n      console.error('創建訂閱失敗:', error)\r\n      throw new Error('創建訂閱失敗')\r\n    }\r\n  }\r\n\r\n  async update(id: string, data: UpdateSubscriptionRequest): Promise<Subscription | null> {\r\n    try {\r\n      const existing = await this.getById(id)\r\n      if (!existing) {\r\n        return null\r\n      }\r\n      \r\n      const updated: Subscription = {\r\n        ...existing,\r\n        ...data,\r\n        updatedAt: new Date().toISOString()\r\n      }\r\n      \r\n      await this.kv.put(`subscription:${id}`, JSON.stringify(updated))\r\n      return updated\r\n    } catch (error) {\r\n      console.error('更新訂閱失敗:', error)\r\n      throw new Error('更新訂閱失敗')\r\n    }\r\n  }\r\n\r\n  async delete(id: string): Promise<boolean> {\r\n    try {\r\n      const existing = await this.getById(id)\r\n      if (!existing) {\r\n        return false\r\n      }\r\n      \r\n      await this.kv.delete(`subscription:${id}`)\r\n      return true\r\n    } catch (error) {\r\n      console.error('刪除訂閱失敗:', error)\r\n      throw new Error('刪除訂閱失敗')\r\n    }\r\n  }\r\n}\r\n\r\n// 根路徑端點\r\napp.get('/', (c) => {\r\n  return c.json({ \r\n    message: 'Subscription Backend API',\r\n    version: '1.0.0',\r\n    endpoints: {\r\n      health: '/api/health',\r\n      subscriptions: '/api/subscriptions',\r\n      subscription: '/api/subscriptions/:id'\r\n    }\r\n  })\r\n})\r\n\r\n// 健康檢查端點\r\napp.get('/api/health', (c) => {\r\n  return c.json({ \r\n    success: true,\r\n    data: { ok: true, timestamp: new Date().toISOString() },\r\n    message: '服務運行正常'\r\n  } as ApiResponse)\r\n})\r\n\r\n// 訂閱管理 API 路由\r\n\r\n// 獲取所有訂閱\r\napp.get('/api/subscriptions', async (c) => {\r\n  try {\r\n    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)\r\n    const subscriptions = await service.getAll()\r\n    \r\n    return c.json({\r\n      success: true,\r\n      data: subscriptions,\r\n      message: '獲取訂閱列表成功'\r\n    } as ApiResponse)\r\n  } catch (error) {\r\n    return c.json({\r\n      success: false,\r\n      error: error instanceof Error ? error.message : '獲取訂閱列表失敗',\r\n      message: '獲取訂閱列表失敗'\r\n    } as ApiResponse, 500)\r\n  }\r\n})\r\n\r\n// 獲取單個訂閱\r\napp.get('/api/subscriptions/:id', async (c) => {\r\n  try {\r\n    const id = c.req.param('id')\r\n    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)\r\n    const subscription = await service.getById(id)\r\n    \r\n    if (!subscription) {\r\n      return c.json({\r\n        success: false,\r\n        error: '訂閱不存在',\r\n        message: '找不到指定的訂閱'\r\n      } as ApiResponse, 404)\r\n    }\r\n    \r\n    return c.json({\r\n      success: true,\r\n      data: subscription,\r\n      message: '獲取訂閱成功'\r\n    } as ApiResponse)\r\n  } catch (error) {\r\n    return c.json({\r\n      success: false,\r\n      error: error instanceof Error ? error.message : '獲取訂閱失敗',\r\n      message: '獲取訂閱失敗'\r\n    } as ApiResponse, 500)\r\n  }\r\n})\r\n\r\n// 創建新訂閱\r\napp.post('/api/subscriptions', async (c) => {\r\n  try {\r\n    const body = await c.req.json()\r\n    \r\n    // 數據驗證\r\n    const validationErrors = validateSubscription(body)\r\n    if (validationErrors.length > 0) {\r\n      return c.json({\r\n        success: false,\r\n        error: validationErrors.join(', '),\r\n        message: '數據驗證失敗'\r\n      } as ApiResponse, 400)\r\n    }\r\n    \r\n    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)\r\n    const subscription = await service.create(body as CreateSubscriptionRequest)\r\n    \r\n    return c.json({\r\n      success: true,\r\n      data: subscription,\r\n      message: '創建訂閱成功'\r\n    } as ApiResponse, 201)\r\n  } catch (error) {\r\n    return c.json({\r\n      success: false,\r\n      error: error instanceof Error ? error.message : '創建訂閱失敗',\r\n      message: '創建訂閱失敗'\r\n    } as ApiResponse, 500)\r\n  }\r\n})\r\n\r\n// 更新訂閱\r\napp.put('/api/subscriptions/:id', async (c) => {\r\n  try {\r\n    const id = c.req.param('id')\r\n    const body = await c.req.json()\r\n    \r\n    // 數據驗證（部分更新，所以只驗證提供的字段）\r\n    const validationErrors = validateSubscription({ ...body, name: body.name || 'temp' })\r\n    if (body.name && validationErrors.some(err => err.includes('訂閱名稱'))) {\r\n      return c.json({\r\n        success: false,\r\n        error: '訂閱名稱不能為空',\r\n        message: '數據驗證失敗'\r\n      } as ApiResponse, 400)\r\n    }\r\n    \r\n    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)\r\n    const subscription = await service.update(id, body as UpdateSubscriptionRequest)\r\n    \r\n    if (!subscription) {\r\n      return c.json({\r\n        success: false,\r\n        error: '訂閱不存在',\r\n        message: '找不到指定的訂閱'\r\n      } as ApiResponse, 404)\r\n    }\r\n    \r\n    return c.json({\r\n      success: true,\r\n      data: subscription,\r\n      message: '更新訂閱成功'\r\n    } as ApiResponse)\r\n  } catch (error) {\r\n    return c.json({\r\n      success: false,\r\n      error: error instanceof Error ? error.message : '更新訂閱失敗',\r\n      message: '更新訂閱失敗'\r\n    } as ApiResponse, 500)\r\n  }\r\n})\r\n\r\n// 刪除訂閱\r\napp.delete('/api/subscriptions/:id', async (c) => {\r\n  try {\r\n    const id = c.req.param('id')\r\n    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)\r\n    const deleted = await service.delete(id)\r\n    \r\n    if (!deleted) {\r\n      return c.json({\r\n        success: false,\r\n        error: '訂閱不存在',\r\n        message: '找不到指定的訂閱'\r\n      } as ApiResponse, 404)\r\n    }\r\n    \r\n    return c.json({\r\n      success: true,\r\n      data: { id },\r\n      message: '刪除訂閱成功'\r\n    } as ApiResponse)\r\n  } catch (error) {\r\n    return c.json({\r\n      success: false,\r\n      error: error instanceof Error ? error.message : '刪除訂閱失敗',\r\n      message: '刪除訂閱失敗'\r\n    } as ApiResponse, 500)\r\n  }\r\n})\r\n\r\nexport default app
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node_modules/subs-backend/src/index.ts b/node_modules/subs-backend/src/index.ts
+--- a/node_modules/subs-backend/src/index.ts	(revision 9817f14d7c1a4ff33db3d4d72f16f927cd587e40)
++++ b/node_modules/subs-backend/src/index.ts	(date 1760790422163)
+@@ -6,11 +6,32 @@
+ /// <reference types="@cloudflare/workers-types" />
+ 
+ type Bindings = {
+-  SUBSCRIPTIONS_KV: KVNamespace
++  DB: D1Database
+ }
+ 
+ const app = new Hono<{ Bindings: Bindings }>()
+ 
++// 安全標頭中間件
++app.use('*', async (c, next) => {
++  // 添加安全標頭
++  c.header('X-Content-Type-Options', 'nosniff')
++  c.header('Content-Security-Policy', "frame-ancestors 'none'")
++  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
++  c.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
++  
++  // 設置正確的 Content-Type
++  c.header('Content-Type', 'application/json; charset=utf-8')
++  
++  // 添加快取控制標頭
++  if (c.req.method === 'GET') {
++    c.header('Cache-Control', 'public, max-age=300') // 5分鐘快取
++  } else {
++    c.header('Cache-Control', 'no-cache, no-store, must-revalidate')
++  }
++  
++  await next()
++})
++
+ // CORS 設定
+ app.use('*', cors({
+   origin: ['http://localhost:3000', 'http://localhost:5173', 'https://ru-web.idv.tw/'],
+@@ -32,16 +53,46 @@
+ function validateSubscription(data: any): string[] {
+   const errors: string[] = []
+   
++  // 添加調試日誌
++  console.log('=== Backend Validation Debug ===')
++  console.log('Received data:', JSON.stringify(data, null, 2))
++  console.log('Date fields check:')
++  console.log('  next_billing_date:', data.next_billing_date)
++  console.log('  nextBilling:', data.nextBilling)
++  console.log('  next_billing:', data.next_billing)
++  console.log('  renewalDate:', data.renewalDate)
++  console.log('  renewal_date:', data.renewal_date)
++  console.log('===============================')
++  
+   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
+     errors.push('訂閱名稱是必填項')
+   }
+   
+-  if (!data.renewAt || typeof data.renewAt !== 'string') {
+-    errors.push('續約日期是必填項')
+-  } else {
+-    const renewDate = new Date(data.renewAt)
+-    if (isNaN(renewDate.getTime())) {
+-      errors.push('續約日期格式無效')
++  // 檢查多種可能的日期字段名稱，並接受任何存在的日期字段
++  const nextBillingDate = data.next_billing_date || data.nextBilling || data.next_billing || data.renewalDate || data.renewal_date || 
++                          data.nextBillingDate || data.next_billing_Date || data.NextBilling
++  
++  console.log('Selected nextBillingDate:', nextBillingDate)
++  console.log('Type of nextBillingDate:', typeof nextBillingDate)
++  
++  // 如果沒有找到任何日期字段，跳過驗證（讓數據庫處理）
++  if (nextBillingDate && typeof nextBillingDate === 'string') {
++    // 處理 ISO 日期格式 (YYYY-MM-DDTHH:mm:ss.sssZ) 或簡單日期格式 (YYYY-MM-DD)
++    let dateToValidate = nextBillingDate
++    if (nextBillingDate.includes('T')) {
++      // 如果是 ISO 格式，提取日期部分
++      dateToValidate = nextBillingDate.split('T')[0]
++    }
++    
++    // 驗證日期格式 YYYY-MM-DD
++    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
++    if (!dateRegex.test(dateToValidate)) {
++      errors.push('續約日期格式必須是 YYYY-MM-DD')
++    } else {
++      const date = new Date(dateToValidate)
++      if (isNaN(date.getTime())) {
++        errors.push('續約日期格式無效')
++      }
+     }
+   }
+   
+@@ -53,49 +104,84 @@
+     errors.push('貨幣代碼是必填項')
+   }
+   
+-  if (!data.billingCycle || !['monthly', 'yearly', 'weekly'].includes(data.billingCycle)) {
+-    errors.push('計費週期必須是 monthly、yearly 或 weekly')
++  // 檢查多種可能的計費週期字段名稱
++  const billingCycle = data.billing_cycle || data.billingCycle
++  
++  console.log('Billing cycle check:', billingCycle, 'Valid values:', ['monthly', 'yearly'].includes(billingCycle))
++  
++  if (!billingCycle || !['monthly', 'yearly'].includes(billingCycle)) {
++    errors.push('計費週期必須是 monthly 或 yearly')
++  }
++  
++  if (data.status && !['active', 'paused', 'cancelled'].includes(data.status)) {
++    errors.push('狀態必須是 active、paused 或 cancelled')
+   }
+   
++  console.log('Validation errors:', errors)
+   return errors
+ }
+ 
+-// 生成唯一 ID
+-function generateId(): string {
+-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
+-}
+-
+-// KV 存儲服務類
++// D1 數據庫服務類
+ class SubscriptionService {
+-  private kv: KVNamespace
++  private db: D1Database
+ 
+-  constructor(kv: KVNamespace) {
+-    this.kv = kv
++  constructor(db: D1Database) {
++    this.db = db
+   }
+ 
+   async getAll(): Promise<Subscription[]> {
+     try {
+-      const list = await this.kv.list({ prefix: 'subscription:' })
+-      const subscriptions: Subscription[] = []
++      const result = await this.db.prepare(`
++        SELECT * FROM subscriptions 
++        ORDER BY next_billing_date ASC
++      `).all()
+       
+-      for (const key of list.keys) {
+-        const value = await this.kv.get(key.name)
+-        if (value) {
+-          subscriptions.push(JSON.parse(value))
+-        }
+-      }
+-      
+-      return subscriptions
++      // 確保沒有 null 值，轉換為空字符串
++      return result.results.map((item: any) => ({
++        id: item.id,
++        name: item.name || '',
++        description: item.description || '',
++        price: item.price || 0,
++        currency: item.currency || 'TWD',
++        billing_cycle: item.billing_cycle || 'monthly',
++        next_billing_date: item.next_billing_date || '',
++        status: item.status || 'active',
++        category: item.category || '',
++        website: item.website || '',
++        created_at: item.created_at || new Date().toISOString(),
++        updated_at: item.updated_at || new Date().toISOString()
++      })) as Subscription[]
+     } catch (error) {
+       console.error('獲取訂閱列表失敗:', error)
+       throw new Error('獲取訂閱列表失敗')
+     }
+   }
+ 
+-  async getById(id: string): Promise<Subscription | null> {
++  async getById(id: number): Promise<Subscription | null> {
+     try {
+-      const value = await this.kv.get(`subscription:${id}`)
+-      return value ? JSON.parse(value) : null
++      const result = await this.db.prepare(`
++        SELECT * FROM subscriptions WHERE id = ?
++      `).bind(id).first()
++      
++      if (!result) {
++        return null
++      }
++      
++      // 確保沒有 null 值，轉換為空字符串
++      return {
++        id: result.id,
++        name: result.name || '',
++        description: result.description || '',
++        price: result.price || 0,
++        currency: result.currency || 'TWD',
++        billing_cycle: result.billing_cycle || 'monthly',
++        next_billing_date: result.next_billing_date || '',
++        status: result.status || 'active',
++        category: result.category || '',
++        website: result.website || '',
++        created_at: result.created_at || new Date().toISOString(),
++        updated_at: result.updated_at || new Date().toISOString()
++      } as Subscription
+     } catch (error) {
+       console.error('獲取訂閱失敗:', error)
+       throw new Error('獲取訂閱失敗')
+@@ -104,18 +190,98 @@
+ 
+   async create(data: CreateSubscriptionRequest): Promise<Subscription> {
+     try {
+-      const id = crypto.randomUUID()
++      console.log('=== Create Subscription Debug ===')
++      console.log('Input data:', JSON.stringify(data, null, 2))
++      
+       const now = new Date().toISOString()
+       
+-      const subscription: Subscription = {
+-        id,
+-        ...data,
+-        createdAt: now,
+-        updatedAt: now,
+-        status: 'active'
++      // 處理多種可能的日期字段名稱
++      const nextBillingDate = data.next_billing_date || (data as any).nextBilling || (data as any).next_billing || (data as any).renewalDate || (data as any).renewal_date
++      
++      // 處理計費週期字段名稱
++      const billingCycle = data.billing_cycle || (data as any).billingCycle
++      
++      console.log('Processed nextBillingDate:', nextBillingDate)
++      console.log('Processed billingCycle:', billingCycle)
++      
++      // 處理日期格式，確保是 YYYY-MM-DD 格式
++      let formattedDate = nextBillingDate
++      if (nextBillingDate && nextBillingDate.includes('T')) {
++        formattedDate = nextBillingDate.split('T')[0]
+       }
+       
+-      await this.kv.put(`subscription:${id}`, JSON.stringify(subscription))
++      console.log('Formatted date:', formattedDate)
++      
++      console.log('About to insert with values:', {
++        name: data.name,
++        description: data.description || null,
++        price: data.price,
++        currency: data.currency,
++        billingCycle,
++        formattedDate,
++        status: data.status || 'active',
++        category: data.category || null,
++        website: data.website || null,
++        now
++      })
++      
++      const result = await this.db.prepare(`
++        INSERT INTO subscriptions (
++          name, description, price, currency, billing_cycle, 
++          next_billing_date, status, category, website, 
++          created_at, updated_at
++        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
++      `).bind(
++        data.name,
++        data.description || null,
++        data.price,
++        data.currency,
++        billingCycle,
++        formattedDate,
++        data.status || 'active',
++        data.category || null,
++        data.website || null,
++        now,
++        now
++      ).run()
++      
++      console.log('Insert result:', result)
++      console.log('Insert meta:', result.meta)
++      console.log('Last row ID:', result.meta?.last_row_id)
++      
++      if (!result.success) {
++        console.error('Insert failed:', result)
++        throw new Error('創建訂閱失敗')
++      }
++      
++      // 檢查 last_row_id 是否存在
++      let lastRowId = result.meta?.last_row_id
++      
++      if (!lastRowId || lastRowId <= 0) {
++        console.warn('Invalid last_row_id:', lastRowId, 'trying to get latest record')
++        
++        // 備用方案：查詢最新的記錄
++        const latestResult = await this.db.prepare(`
++          SELECT id FROM subscriptions 
++          WHERE name = ? AND created_at = ?
++          ORDER BY id DESC LIMIT 1
++        `).bind(data.name, now).first()
++        
++        if (latestResult && latestResult.id) {
++          lastRowId = latestResult.id as number
++          console.log('Found latest record ID:', lastRowId)
++        } else {
++          console.error('Cannot find created record')
++          throw new Error('創建訂閱失敗：無法獲取有效的訂閱 ID')
++        }
++      }
++      
++      const subscription = await this.getById(lastRowId)
++      if (!subscription) {
++        throw new Error('創建後無法獲取訂閱')
++      }
++      
++      console.log('Created subscription:', subscription)
+       return subscription
+     } catch (error) {
+       console.error('創建訂閱失敗:', error)
+@@ -123,36 +289,99 @@
+     }
+   }
+ 
+-  async update(id: string, data: UpdateSubscriptionRequest): Promise<Subscription | null> {
++  async update(id: number, data: UpdateSubscriptionRequest): Promise<Subscription | null> {
+     try {
+       const existing = await this.getById(id)
+       if (!existing) {
+         return null
+       }
+       
+-      const updated: Subscription = {
+-        ...existing,
+-        ...data,
+-        updatedAt: new Date().toISOString()
++      const now = new Date().toISOString()
++      
++      // 構建動態更新語句
++      const updateFields: string[] = []
++      const values: any[] = []
++      
++      if (data.name !== undefined) {
++        updateFields.push('name = ?')
++        values.push(data.name)
++      }
++      if (data.description !== undefined) {
++        updateFields.push('description = ?')
++        values.push(data.description)
++      }
++      if (data.price !== undefined) {
++        updateFields.push('price = ?')
++        values.push(data.price)
++      }
++      if (data.currency !== undefined) {
++        updateFields.push('currency = ?')
++        values.push(data.currency)
++      }
++      // 處理計費週期字段名稱
++      const billingCycle = data.billing_cycle || (data as any).billingCycle
++      if (billingCycle !== undefined) {
++        updateFields.push('billing_cycle = ?')
++        values.push(billingCycle)
++      }
++      
++      // 處理日期字段名稱
++      const nextBillingDate = data.next_billing_date || (data as any).nextBilling || (data as any).next_billing || (data as any).renewalDate || (data as any).renewal_date
++      if (nextBillingDate !== undefined) {
++        // 處理日期格式，確保是 YYYY-MM-DD 格式
++        let formattedDate = nextBillingDate
++        if (nextBillingDate && nextBillingDate.includes('T')) {
++          formattedDate = nextBillingDate.split('T')[0]
++        }
++        updateFields.push('next_billing_date = ?')
++        values.push(formattedDate)
++      }
++      if (data.status !== undefined) {
++        updateFields.push('status = ?')
++        values.push(data.status)
++      }
++      if (data.category !== undefined) {
++        updateFields.push('category = ?')
++        values.push(data.category)
++      }
++      if (data.website !== undefined) {
++        updateFields.push('website = ?')
++        values.push(data.website)
++      }
++      
++      updateFields.push('updated_at = ?')
++      values.push(now)
++      values.push(id)
++      
++      const result = await this.db.prepare(`
++        UPDATE subscriptions 
++        SET ${updateFields.join(', ')}
++        WHERE id = ?
++      `).bind(...values).run()
++      
++      if (!result.success) {
++        throw new Error('更新訂閱失敗')
+       }
+       
+-      await this.kv.put(`subscription:${id}`, JSON.stringify(updated))
+-      return updated
++      return await this.getById(id)
+     } catch (error) {
+       console.error('更新訂閱失敗:', error)
+       throw new Error('更新訂閱失敗')
+     }
+   }
+ 
+-  async delete(id: string): Promise<boolean> {
++  async delete(id: number): Promise<boolean> {
+     try {
+       const existing = await this.getById(id)
+       if (!existing) {
+         return false
+       }
+       
+-      await this.kv.delete(`subscription:${id}`)
+-      return true
++      const result = await this.db.prepare(`
++        DELETE FROM subscriptions WHERE id = ?
++      `).bind(id).run()
++      
++      return result.success
+     } catch (error) {
+       console.error('刪除訂閱失敗:', error)
+       throw new Error('刪除訂閱失敗')
+@@ -181,13 +410,46 @@
+     message: '服務運行正常'
+   } as ApiResponse)
+ })
++
++// 數據庫初始化端點
++app.post('/api/init-db', async (c) => {
++  try {
++    const db = c.env.DB
++    
++    // 執行數據庫初始化腳本 - 使用單行 SQL 語句
++    const createTableSQL = `CREATE TABLE IF NOT EXISTS subscriptions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, price REAL NOT NULL, currency TEXT NOT NULL, billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly','yearly')), next_billing_date TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', category TEXT, website TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')), updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')))`
++    
++    const createIndex1SQL = `CREATE INDEX IF NOT EXISTS idx_subs_next_billing ON subscriptions (next_billing_date)`
++    const createIndex2SQL = `CREATE INDEX IF NOT EXISTS idx_subs_status ON subscriptions (status)`
++    
++    // 分步執行 SQL 語句
++    await db.exec(createTableSQL)
++    await db.exec(createIndex1SQL)
++    await db.exec(createIndex2SQL)
++    
++    return c.json({
++      success: true,
++      data: { 
++        executed: true,
++        message: '數據庫表結構已創建'
++      },
++      message: '數據庫初始化成功'
++    } as ApiResponse)
++  } catch (error) {
++    return c.json({
++      success: false,
++      error: error instanceof Error ? error.message : '數據庫初始化失敗',
++      message: '數據庫初始化失敗'
++    } as ApiResponse, 500)
++  }
++})
+ 
+ // 訂閱管理 API 路由
+ 
+ // 獲取所有訂閱
+ app.get('/api/subscriptions', async (c) => {
+   try {
+-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
++    const service = new SubscriptionService(c.env.DB)
+     const subscriptions = await service.getAll()
+     
+     return c.json({
+@@ -207,8 +469,16 @@
+ // 獲取單個訂閱
+ app.get('/api/subscriptions/:id', async (c) => {
+   try {
+-    const id = c.req.param('id')
+-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
++    const id = parseInt(c.req.param('id'))
++    if (isNaN(id)) {
++      return c.json({
++        success: false,
++        error: '無效的訂閱ID',
++        message: '訂閱ID必須是數字'
++      } as ApiResponse, 400)
++    }
++    
++    const service = new SubscriptionService(c.env.DB)
+     const subscription = await service.getById(id)
+     
+     if (!subscription) {
+@@ -248,7 +518,7 @@
+       } as ApiResponse, 400)
+     }
+     
+-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
++    const service = new SubscriptionService(c.env.DB)
+     const subscription = await service.create(body as CreateSubscriptionRequest)
+     
+     return c.json({
+@@ -268,7 +538,15 @@
+ // 更新訂閱
+ app.put('/api/subscriptions/:id', async (c) => {
+   try {
+-    const id = c.req.param('id')
++    const id = parseInt(c.req.param('id'))
++    if (isNaN(id)) {
++      return c.json({
++        success: false,
++        error: '無效的訂閱ID',
++        message: '訂閱ID必須是數字'
++      } as ApiResponse, 400)
++    }
++    
+     const body = await c.req.json()
+     
+     // 數據驗證（部分更新，所以只驗證提供的字段）
+@@ -281,7 +559,7 @@
+       } as ApiResponse, 400)
+     }
+     
+-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
++    const service = new SubscriptionService(c.env.DB)
+     const subscription = await service.update(id, body as UpdateSubscriptionRequest)
+     
+     if (!subscription) {
+@@ -309,8 +587,16 @@
+ // 刪除訂閱
+ app.delete('/api/subscriptions/:id', async (c) => {
+   try {
+-    const id = c.req.param('id')
+-    const service = new SubscriptionService(c.env.SUBSCRIPTIONS_KV)
++    const id = parseInt(c.req.param('id'))
++    if (isNaN(id)) {
++      return c.json({
++        success: false,
++        error: '無效的訂閱ID',
++        message: '訂閱ID必須是數字'
++      } as ApiResponse, 400)
++    }
++    
++    const service = new SubscriptionService(c.env.DB)
+     const deleted = await service.delete(id)
+     
+     if (!deleted) {

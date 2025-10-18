@@ -1,0 +1,9 @@
+<changelist name="Uncommitted_changes_before_Update_at_2025_10_18_下午_09_00_[Changes]" date="1760792429477" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025_10_18_下午_09_00_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 2025/10/18 下午 09:00 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="node_modules/@esbuild/win32-x64/esbuild.exe" />
+    <option name="AFTER_PATH" value="node_modules/@esbuild/win32-x64/esbuild.exe" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025_10_18_下午_09_00_[Changes]/esbuild.exe" />
+  </binary>
+</changelist>
