@@ -9,6 +9,7 @@
           </svg>
         </div>
         <input
+          id="searchQuery"
           v-model="searchQuery"
           type="text"
           placeholder="搜索訂閱服務..."

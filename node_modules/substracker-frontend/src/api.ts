@@ -1,5 +1,4 @@
 // API 服務配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787'
 
 // API 請求封裝
 class ApiService {
@@ -20,21 +19,45 @@ class ApiService {
       },
       ...options,
     }
+    // 印出請求詳情
+    console.log('=== Frontend API Request ===')
+    console.log('URL:', url)
+    console.log('Method:', config.method || 'GET')
+    console.log('Headers:', config.headers)
+    if (config.body) {
+      console.log('Body:', config.body)
+    }
+    console.log('============================')
 
     try {
-      const response = await fetch(url, config)
+      const res = await fetch(url, config)
+      const text = await res.text() // 不要直接 res.json()，先拿 raw 文字
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // 記錄響應詳情
+      console.log('=== Frontend API Response ===')
+      console.log('Status:', res.status)
+      console.log('Response body:', text)
+      console.log('=============================')
+      
+      if (!res.ok) {
+        console.error('API error body:', text) // 這裡會看到 zod/schema 的錯誤細節
+        try {
+          const errorData = JSON.parse(text)
+          if (errorData.issues) {
+            console.error('Zod validation issues:', errorData.issues)
+          }
+        } catch (e) {
+          // 如果不是 JSON，直接顯示文字
+        }
+        throw new Error(`HTTP ${res.status}: ${text}`)
       }
       
-      const data = await response.json()
-      return { success: true, data }
+      return { success: true, data: text ? JSON.parse(text) : null }
     } catch (error) {
       console.error('API request failed:', error)
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
@@ -77,6 +100,9 @@ class ApiService {
     })
   }
 }
+
+// API Base URL - 更新為你的後端 URL
+const API_BASE_URL = 'https://subs-backend.andy9729701.workers.dev'
 
 // 導出 API 實例
 export const api = new ApiService(API_BASE_URL)

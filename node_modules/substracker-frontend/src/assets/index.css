@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 修復 text-size-adjust 警告 - 支援所有瀏覽器 */
+@layer base {
+  html,
+  :host {
+    -webkit-text-size-adjust: 100% !important;
+    -moz-text-size-adjust: 100% !important;
+    -ms-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+  }
+}
+
 /* 自定義組件樣式 */
 @layer components {
   .btn-primary {
