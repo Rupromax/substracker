@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vite.config.ts" afterDir="false" />
-    </list>
+    <list default="true" id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="updata" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -97,7 +94,7 @@
       <workItem from="1760793683755" duration="154000" />
       <workItem from="1760793849811" duration="2456000" />
       <workItem from="1760799532951" duration="59000" />
-      <workItem from="1760799616090" duration="119000" />
+      <workItem from="1760799616090" duration="164000" />
     </task>
     <task id="LOCAL-00001" summary="fix 添加未上傳檔案(test)">
       <option name="closed" value="true" />
@@ -107,7 +104,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760794003752</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="updata">
+      <option name="closed" value="true" />
+      <created>1760799753062</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1760799753062</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -126,6 +131,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fix 添加未上傳檔案(test)" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix 添加未上傳檔案(test)" />
+    <MESSAGE value="updata" />
+    <option name="LAST_COMMIT_MESSAGE" value="updata" />
   </component>
 </project>

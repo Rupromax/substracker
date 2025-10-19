@@ -1,10 +1,10 @@
 import Login from '@/pages/Login.vue';
 import Settings from '@/pages/Settings.vue';
 import Subscriptions from '@/pages/Subscriptions.vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     {
       path: '/',
