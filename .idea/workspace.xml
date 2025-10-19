@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="updata" />
+    <list default="true" id="3ee0f56e-1780-487a-aee4-7d09cfbe0462" name="Changes" comment="updata">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/e2f851e5a15d5b2fe6cd13bded3fe4e3b1e697bbd51219e56083097f7fb91248.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.wrangler/state/v3/d1/miniflare-D1DatabaseObject/e2f851e5a15d5b2fe6cd13bded3fe4e3b1e697bbd51219e56083097f7fb91248.sqlite" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/index.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -17,6 +22,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="MIXED" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -95,6 +101,7 @@
       <workItem from="1760793849811" duration="2456000" />
       <workItem from="1760799532951" duration="59000" />
       <workItem from="1760799616090" duration="164000" />
+      <workItem from="1760844585971" duration="1849000" />
     </task>
     <task id="LOCAL-00001" summary="fix 添加未上傳檔案(test)">
       <option name="closed" value="true" />
